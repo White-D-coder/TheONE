@@ -1,0 +1,111 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.vaultHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 48px;
+}
+
+.filterBar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.filterBtn {
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.filterBtnActive {
+  background: var(--accent-blue);
+  color: white;
+  border-color: var(--accent-blue);
+}
+
+.vaultGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 24px;
+}
+
+.evidenceCard {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+.strengthBadge {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.strengthStrong { background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); }
+.strengthElite { background: rgba(16, 185, 129, 0.1); color: var(--accent-emerald); }
+.strengthMedium { background: rgba(139, 92, 246, 0.1); color: var(--accent-purple); }
+
+.evidenceIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--bg-surface-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.evidenceTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+.evidenceDesc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.evidenceFooter {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.evidenceDate {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.tagList {
+  display: flex;
+  gap: 8px;
+}
+
+.tag {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  padding: 2px 8px;
+  background: var(--bg-surface-hover);
+  border-radius: 4px;
+}

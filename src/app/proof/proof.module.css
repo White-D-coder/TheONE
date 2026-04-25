@@ -1,0 +1,93 @@
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.studioGrid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 32px;
+  margin-top: 40px;
+}
+
+.artifactSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.artifactItem {
+  padding: 16px;
+  cursor: pointer;
+  border: 1px solid var(--border-subtle);
+  transition: var(--transition-standard);
+}
+
+.artifactItem:hover {
+  background: var(--bg-surface);
+}
+
+.artifactSelected {
+  border-color: var(--accent-blue);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.editorCard {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.textArea {
+  width: 100%;
+  min-height: 300px;
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+}
+
+.textArea:focus {
+  border-color: var(--accent-blue);
+}
+
+.draftOptions {
+  display: flex;
+  gap: 12px;
+}
+
+.optionBtn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.optionBtnActive {
+  background: var(--accent-blue);
+  color: white;
+  border-color: var(--accent-blue);
+}
+
+.qualityBar {
+  height: 4px;
+  background: var(--bg-surface-hover);
+  border-radius: 2px;
+  margin-top: 8px;
+}
+
+.qualityFill {
+  height: 100%;
+  background: var(--accent-emerald);
+  border-radius: 2px;
+}

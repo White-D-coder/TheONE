@@ -1,0 +1,98 @@
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.worthHeader {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.mainScore {
+  font-size: 6rem;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.worthTrend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--accent-emerald);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.breakdownCard {
+  padding: 32px;
+}
+
+.breakdownItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.breakdownItem:last-child {
+  border-bottom: none;
+}
+
+.itemLabel {
+  display: flex;
+  flex-direction: column;
+}
+
+.itemName {
+  font-weight: 600;
+}
+
+.itemDesc {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.itemValue {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.summarySection {
+  margin-top: 64px;
+  padding: 40px;
+  background: var(--bg-surface);
+}
+
+.summaryTitle {
+  font-size: 1.25rem;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summaryText {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.badge {
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.badgeExcellent { background: rgba(16, 185, 129, 0.1); color: var(--accent-emerald); }
+.badgeGood { background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); }
+.badgeWarning { background: rgba(245, 158, 11, 0.1); color: var(--accent-amber); }

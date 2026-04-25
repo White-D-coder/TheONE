@@ -1,0 +1,95 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.section {
+  margin-bottom: 48px;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.settingRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+}
+
+.settingInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settingLabel {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.settingDesc {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  max-width: 400px;
+}
+
+.toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--bg-surface-hover);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: var(--transition-standard);
+}
+
+.toggleActive {
+  background: var(--accent-blue);
+}
+
+.toggleCircle {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  transition: var(--transition-standard);
+}
+
+.toggleCircleActive {
+  left: 24px;
+}
+
+.select {
+  padding: 8px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.dangerZone {
+  padding: 24px;
+  border: 1px solid var(--accent-rose);
+  background: rgba(244, 63, 94, 0.03);
+  border-radius: var(--radius-lg);
+}
+
+.dangerTitle {
+  color: var(--accent-rose);
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

@@ -9,8 +9,10 @@ import {
   Briefcase, 
   Zap,
   Coffee,
-  AlertTriangle
+  AlertTriangle,
+  Save
 } from 'lucide-react';
+import { updateRoles, updateMode } from '@/lib/actions';
 import styles from './identity.module.css';
 
 const MODES = [
@@ -30,20 +32,56 @@ const INITIAL_ROLES = [
 export default function IdentityPage() {
   const [currentMode, setCurrentMode] = useState('NORMAL');
   const [roles, setRoles] = useState(INITIAL_ROLES);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleWeightChange = (id: string, weight: number) => {
     setRoles(roles.map(r => r.id === id ? { ...r, weight } : r));
   };
 
+  const handleModeChange = async (mode: string) => {
+    setCurrentMode(mode);
+    await updateMode(mode);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    const weightMap = roles.reduce((acc, r) => ({ ...acc, [r.id]: r.weight }), {});
+    await updateRoles(weightMap);
+    setIsSaving(false);
+    alert('Identity Rebalanced. Routine gravity updated.');
+  };
+
   return (
     <div className={`animate-fade-in ${styles.container}`}>
       <header className={styles.header}>
-        <h1 style={{ fontSize: '2.5rem', marginBottom: '8px' }}>
-          Identity & <span className="text-gradient">Mode Engine</span>
-        </h1>
-        <p style={{ color: 'var(--text-secondary)' }}>
-          Configure your professional weightings to override the Routine Engine.
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div>
+            <h1 style={{ fontSize: '2.5rem', marginBottom: '8px' }}>
+              Identity & <span className="text-gradient">Mode Engine</span>
+            </h1>
+            <p style={{ color: 'var(--text-secondary)' }}>
+              Configure your professional weightings to override the Routine Engine.
+            </p>
+          </div>
+          <button 
+            className="glass-card" 
+            onClick={handleSave}
+            disabled={isSaving}
+            style={{ 
+              padding: '12px 24px', 
+              background: 'var(--grad-primary)', 
+              border: 'none', 
+              color: 'white', 
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              opacity: isSaving ? 0.7 : 1
+            }}
+          >
+            <Save size={18} /> {isSaving ? 'REBALANCING...' : 'SAVE IDENTITY'}
+          </button>
+        </div>
       </header>
 
       <section style={{ marginBottom: '64px' }}>
@@ -56,7 +94,7 @@ export default function IdentityPage() {
             <div 
               key={mode.id} 
               className={`glass-card ${styles.modeCard} ${currentMode === mode.id ? styles.activeMode : ''}`}
-              onClick={() => setCurrentMode(mode.id)}
+              onClick={() => handleModeChange(mode.id)}
             >
               <div className={styles.modeIcon}>
                 <mode.icon size={24} color={currentMode === mode.id ? 'var(--accent-blue)' : 'var(--text-tertiary)'} />
@@ -114,16 +152,19 @@ export default function IdentityPage() {
               Changing weights will reorder your deep work blocks for tomorrow. The AI Mentor suggests 
               prioritizing **Engineer** mastery as your DSA score has plateaued.
             </p>
-            <button style={{ 
-              marginTop: '16px', 
-              padding: '8px 16px', 
-              background: 'var(--accent-amber)', 
-              border: 'none', 
-              borderRadius: 'var(--radius-sm)',
-              color: 'black',
-              fontWeight: 600,
-              fontSize: '0.8rem'
-            }}>
+            <button 
+              onClick={handleSave}
+              style={{ 
+                marginTop: '16px', 
+                padding: '8px 16px', 
+                background: 'var(--accent-amber)', 
+                border: 'none', 
+                borderRadius: 'var(--radius-sm)',
+                color: 'black',
+                fontWeight: 600,
+                fontSize: '0.8rem'
+              }}
+            >
               Confirm & Rebalance
             </button>
           </div>

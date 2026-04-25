@@ -1,0 +1,104 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.reviewGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-top: 40px;
+}
+
+.reportCard {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.reportHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.reportTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toneBadge {
+  font-size: 0.7rem;
+  padding: 4px 10px;
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
+
+.reportContent {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.metricItem {
+  padding: 16px;
+  background: var(--bg-surface-hover);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.metricLabel {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.metricValue {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.chartContainer {
+  height: 200px;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding-top: 40px;
+}
+
+.bar {
+  flex: 1;
+  background: var(--bg-surface-hover);
+  border-radius: 4px 4px 0 0;
+  transition: height 0.5s ease-out;
+}
+
+.barActive {
+  background: var(--grad-primary);
+}
+
+.insightSection {
+  margin-top: 48px;
+}
+
+.insightCard {
+  padding: 24px;
+  border-left: 4px solid var(--accent-blue);
+  background: rgba(59, 130, 246, 0.05);
+}

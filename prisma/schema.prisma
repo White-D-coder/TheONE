@@ -2,27 +2,50 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
+  engineType = "library"
 }
 
 datasource db {
   provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
   name          String?
-  roleWeights   Json?     // { student: 0.5, builder: 0.3, ... }
+  roleWeights   Json?     // { engineer: 60, builder: 40, ... }
   currentMode   String    @default("NORMAL")
+  
+  // Relations
   skills        Skill[]
   evidences     Evidence[]
   routines      Routine[]
   projects      Project[]
   logs          DailyLog[]
   worthHistory  WorthRecord[]
+  accounts      PlatformAccount[]
+  speaking      SpeakingSession[]
+  opportunities Opportunity[]
+  drafts        PostDraft[]
+  events        EventLog[]
+  
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+model PlatformAccount {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  platform    String   // GITHUB, LEETCODE, CODEFORCES
+  username    String
+  accessToken String?
+  lastSynced  DateTime?
+  syncStatus  String   @default("IDLE") // IDLE, SYNCING, FAILED
+  stats       Json?    // Raw platform stats like solved problems, rating
+  createdAt   DateTime @default(now())
 }
 
 model Skill {
@@ -30,7 +53,7 @@ model Skill {
   userId            String
   user              User     @relation(fields: [userId], references: [id])
   name              String
-  category          String   // TECHNICAL, COMMUNICATION, CAREER
+  category          String   // TECHNICAL, SOFT
   score             Float    @default(0)
   confidenceScore  Float    @default(0)
   consistencyScore  Float    @default(0)
@@ -42,10 +65,12 @@ model Evidence {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id])
-  type        String   // COMMIT, REPO, BLOG, SPEECH, CERT
+  type        String   // REPO, COMMIT, BLOG, ARTICLE, VIDEO
   title       String
+  description String?
   url         String?
   strength    Float    // 0 to 1
+  source      String   @default("MANUAL") // GITHUB, MANUAL, SYNC
   skillId     String?
   projectId   String?
   createdAt   DateTime @default(now())
@@ -56,9 +81,11 @@ model Project {
   userId      String
   user        User     @relation(fields: [userId], references: [id])
   name        String
+  description String?
   stage       String   // IDEA, BUILDING, SHIPPED
   techStack   Json?
   visibility  String   @default("PRIVATE") // PRIVATE, PUBLIC
+  githubRepo  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -70,6 +97,7 @@ model DailyLog {
   date        DateTime @default(now())
   workBlocks  Json?    // [{ start, end, type, focusScore }]
   distractions Int     @default(0)
+  energy      Int      @default(5) // 1-10
   summary     String?
 }
 
@@ -78,9 +106,50 @@ model Routine {
   userId      String
   user        User     @relation(fields: [userId], references: [id])
   name        String
-  blocks      Json     // [{ label, duration, startTime, roleWeight }]
-  isFallback  Boolean  @default(false)
+  blocks      Json     // [{ label, duration, startTime, type, status }]
+  active      Boolean  @default(true)
   createdAt   DateTime @default(now())
+}
+
+model SpeakingSession {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  topic       String
+  transcript  String?
+  audioUrl    String?
+  scores      Json?    // { clarity: 8, pacing: 7, ... }
+  feedback    String?
+  createdAt   DateTime @default(now())
+}
+
+model Opportunity {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  title       String
+  company     String
+  location    String?
+  salary      String?
+  url         String?
+  source      String   @default("SCRAPER")
+  status      String   @default("DISCOVERED") // DISCOVERED, SAVED, APPLIED, REJECTED, INTERVIEW
+  fitScore    Float
+  reason      String?
+  createdAt   DateTime @default(now())
+}
+
+model PostDraft {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  platform    String   // LINKEDIN, MEDIUM, TWITTER
+  content     String
+  status      String   @default("DRAFT") // DRAFT, READY, PUBLISHED
+  evidenceId  String?
+  publishedUrl String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model WorthRecord {
@@ -91,5 +160,26 @@ model WorthRecord {
   year        Int
   score       Float
   breakdown   Json
+  createdAt   DateTime @default(now())
+}
+
+model ContentItem {
+  id          String   @id @default(cuid())
+  title       String
+  url         String   @unique
+  source      String
+  category    String   // ENGINEERING, PRODUCT, AI, RESEARCH
+  summary     String?
+  relevance   Float    @default(0)
+  status      String   @default("UNREAD") // UNREAD, SAVED, IGNORED
+  createdAt   DateTime @default(now())
+}
+
+model EventLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  type        String   // TASK_DONE, EVIDENCE_ADDED, SPEAKING_DONE, SYNC_DONE
+  metadata    Json?
   createdAt   DateTime @default(now())
 }

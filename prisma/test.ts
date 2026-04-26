@@ -1,20 +1,31 @@
 import { PrismaClient } from '@prisma/client'
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
-import Database from 'better-sqlite3'
 
-const db = new Database('./prisma/dev.db')
-const adapter = new PrismaBetterSqlite3(db)
-const prisma = new PrismaClient({ adapter })
+const prisma = new PrismaClient()
 
-async function test() {
+async function main() {
   try {
-    const user = await prisma.user.findFirst()
-    console.log('Connection successful:', user)
+    const userCount = await prisma.user.count()
+    console.log(`✅ Connection successful. User count: ${userCount}`)
+    
+    const user = await prisma.user.findFirst({
+      include: { 
+        skills: true,
+        evidences: true,
+        projects: true
+      }
+    })
+    
+    if (user) {
+      console.log('✅ User "Elite Student" found.')
+      console.log(`- Skills: ${user.skills.length}`)
+      console.log(`- Evidence: ${user.evidences.length}`)
+      console.log(`- Projects: ${user.projects.length}`)
+    }
   } catch (e) {
-    console.error('Connection failed:', e)
+    console.error('❌ Connection failed:', e)
   } finally {
     await prisma.$disconnect()
   }
 }
 
-test()
+main()

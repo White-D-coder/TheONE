@@ -15,23 +15,33 @@ import {
   Settings,
   Cpu
 } from 'lucide-react';
+import { getOSState } from '@/lib/actions';
 import styles from './Sidebar.module.css';
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Control Center', href: '/' },
+  { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
   { icon: Target, label: 'Identity & Mode', href: '/identity' },
   { icon: Cpu, label: 'Routine Engine', href: '/routine' },
-  { icon: FileCode2, label: 'Execution Tracker', href: '/tracker' },
   { icon: Briefcase, label: 'Evidence Vault', href: '/vault' },
-  { icon: TrendingUp, label: 'Skill Progress', href: '/skills' },
+  { icon: TrendingUp, label: 'Skill Matrix', href: '/skills' },
   { icon: Mic2, label: 'Speaking Lab', href: '/speaking' },
-  { icon: ShieldCheck, label: 'Public Proof', href: '/proof' },
-  { icon: TrendingUp, label: 'Analytics & Review', href: '/analytics' },
-  { icon: Terminal, label: 'Opportunities', href: '/opportunities' },
+  { icon: ShieldCheck, label: 'Worth Impact', href: '/worth' },
+  { icon: Terminal, label: 'Knowledge Feed', href: '/content' },
+  { icon: TrendingUp, label: 'Analytics', href: '/analytics' },
+  { icon: Briefcase, label: 'Opportunities', href: '/opportunities' },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [user, setUser] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    async function load() {
+      const state = await getOSState();
+      setUser((state as any).user);
+    }
+    load();
+  }, []);
 
   return (
     <aside className={styles.sidebar}>
@@ -57,10 +67,12 @@ export function Sidebar() {
 
       <div className={styles.footer}>
         <div className={styles.userCard}>
-          <div className={styles.avatar} />
+          <div className={styles.avatar} style={{ background: 'var(--accent-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: 'white' }}>
+            {user?.name?.[0] || 'E'}
+          </div>
           <div className={styles.userInfo}>
-            <span className={styles.userName}>Elite Student</span>
-            <span className={styles.userRole}>Engineer | Builder</span>
+            <span className={styles.userName}>{user?.name || 'Loading...'}</span>
+            <span className={styles.userRole}>Engineer OS Active</span>
           </div>
           <Settings size={16} className={styles.navItem} style={{ marginLeft: 'auto', padding: 0 }} />
         </div>

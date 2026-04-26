@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FileCode2, 
   Globe, 
@@ -14,44 +14,48 @@ import {
   RefreshCw,
   Code
 } from 'lucide-react';
-import { getGitHubStats } from '@/lib/actions';
+import { syncGitHub, getOSState } from '@/lib/actions';
 import styles from './vault.module.css';
-
-const EVIDENCE = [
-  { 
-    id: 1, 
-    type: 'REPO', 
-    title: 'Adaptive Scheduler Core', 
-    desc: 'The backend engine for Engineer OS. Implements dynamic role weighting and habit persistence logic.',
-    strength: 'ELITE',
-    icon: Code,
-    tags: ['Next.js', 'Prisma', 'PostgreSQL'],
-    date: 'Apr 24, 2026'
-  },
-  { 
-    id: 2, 
-    type: 'ARTICLE', 
-    title: 'Why Consistency Beats Intensity', 
-    desc: 'Deep dive into the math of compounding growth in engineering careers. Published on Medium.',
-    strength: 'STRONG',
-    icon: FileText,
-    tags: ['Career', 'Writing'],
-    date: 'Apr 20, 2026'
-  },
-];
 
 export default function VaultPage() {
   const [filter, setFilter] = useState('ALL');
   const [username, setUsername] = useState('');
   const [ghStats, setGhStats] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [evidence, setEvidence] = useState<any[]>([]);
+
+  const fetchEvidence = async () => {
+    const state = await getOSState();
+    if ((state as any).user) {
+      setEvidence((state as any).user.evidences);
+    }
+  };
+
+  useEffect(() => {
+    fetchEvidence();
+  }, []);
 
   const handleSyncGitHub = async () => {
     if (!username) return;
     setLoading(true);
-    const stats = await getGitHubStats(username);
-    setGhStats(stats);
+    const result = await syncGitHub(username);
+    if ((result as any).success) {
+      await fetchEvidence(); // Refresh list after sync
+      setUsername('');
+    } else {
+      alert(`Sync failed: ${(result as any).error}`);
+    }
     setLoading(false);
+  };
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case 'REPO': return Code;
+      case 'ARTICLE': return FileText;
+      case 'SPEECH': return Mic2;
+      case 'DEMO': return Cpu;
+      default: return Globe;
+    }
   };
 
   return (
@@ -141,41 +145,40 @@ export default function VaultPage() {
       </div>
 
       <div className={styles.vaultGrid}>
-        {EVIDENCE.map((item) => (
-          <div key={item.id} className={`glass-card ${styles.evidenceCard}`}>
-            <span className={`${styles.strengthBadge} ${
-              item.strength === 'ELITE' ? styles.strengthElite : 
-              item.strength === 'STRONG' ? styles.strengthStrong : ''
-            }`}>
-              {item.strength}
-            </span>
-            
-            <div className={styles.evidenceIcon}>
-              <item.icon size={24} color="var(--text-primary)" />
-            </div>
+        {evidence.map((item) => {
+          const Icon = getIcon(item.type);
+          return (
+            <div key={item.id} className={`glass-card ${styles.evidenceCard}`}>
+              <span className={`${styles.strengthBadge} ${
+                item.strength > 0.8 ? styles.strengthElite : 
+                item.strength > 0.5 ? styles.strengthStrong : ''
+              }`}>
+                {item.strength > 0.8 ? 'ELITE' : 'STRONG'}
+              </span>
+              
+              <div className={styles.evidenceIcon}>
+                <Icon size={24} color="var(--text-primary)" />
+              </div>
 
-            <div>
-              <h3 className={styles.evidenceTitle}>{item.title}</h3>
-              <p className={styles.evidenceDesc}>{item.desc}</p>
-            </div>
+              <div>
+                <h3 className={styles.evidenceTitle}>{item.title}</h3>
+                <p className={styles.evidenceDesc}>Verified proof of competence. {item.url}</p>
+              </div>
 
-            <div className={styles.tagList}>
-              {item.tags.map(tag => (
-                <span key={tag} className={styles.tag}>{tag}</span>
-              ))}
-            </div>
-
-            <div className={styles.evidenceFooter}>
-              <span className={styles.evidenceDate}>{item.date}</span>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button style={{ color: 'var(--text-tertiary)' }}><MoreVertical size={16} /></button>
-                <button style={{ color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 600 }}>
-                  VIEW <ExternalLink size={12} />
-                </button>
+              <div className={styles.evidenceFooter}>
+                <span className={styles.evidenceDate}>{new Date(item.createdAt).toLocaleDateString()}</span>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button style={{ color: 'var(--text-tertiary)', border: 'none', background: 'transparent' }}><MoreVertical size={16} /></button>
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                    <button style={{ color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 600, border: 'none', background: 'transparent' }}>
+                      VIEW <ExternalLink size={12} />
+                    </button>
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

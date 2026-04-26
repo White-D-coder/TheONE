@@ -1,21 +1,60 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Mic, 
   Square, 
   RotateCcw, 
-  Send, 
   MessageSquare,
   BarChart3,
   Lightbulb,
-  Zap
+  Zap,
+  RefreshCw
 } from 'lucide-react';
+import { saveSpeakingSession, getOSState } from '@/lib/actions';
 import styles from './speaking.module.css';
+
+const PROMPTS = [
+  "Explain the difference between a Process and a Thread.",
+  "How does React's Virtual DOM work?",
+  "Describe the concept of 'Eventual Consistency' in distributed systems.",
+  "Explain the time complexity of QuickSort.",
+  "Tell me about a time you resolved a technical conflict."
+];
 
 export default function SpeakingPage() {
   const [isRecording, setIsRecording] = useState(false);
-  const [hasTranscript, setHasTranscript] = useState(false);
+  const [session, setSession] = useState<any>(null);
+  const [transcript, setTranscript] = useState("So um, basically a process is like an isolated instance, right? And like, threads share the same memory.");
+  const [currentPrompt, setCurrentPrompt] = useState(PROMPTS[0]);
+  const [history, setHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchHistory = async () => {
+    const state = await getOSState();
+    if ((state as any).user) {
+      setHistory((state as any).user.speaking || []);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  const handleFinish = async () => {
+    setIsRecording(false);
+    setLoading(true);
+    const result = await saveSpeakingSession(currentPrompt, transcript);
+    setSession(result);
+    await fetchHistory();
+    setLoading(false);
+  };
+
+  const nextPrompt = () => {
+    const nextIdx = (PROMPTS.indexOf(currentPrompt) + 1) % PROMPTS.length;
+    setCurrentPrompt(PROMPTS[nextIdx]);
+    setSession(null);
+  };
 
   return (
     <div className={`animate-fade-in ${styles.container}`}>
@@ -24,20 +63,21 @@ export default function SpeakingPage() {
           Speaking <span className="text-gradient">Lab</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)' }}>
-          Technical articulation and interview confidence training.
+          Real technical articulation training powered by AI analysis.
         </p>
       </header>
 
       <div className={styles.labGrid}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           <div className={`glass-card ${styles.recorderCard}`}>
-            {!hasTranscript ? (
+            {!session ? (
               <>
                 <div className={styles.promptCard}>
-                  <span className={styles.promptLabel}>Current Drill: Technical Explanation</span>
-                  <p className={styles.promptText}>
-                    "Explain the difference between a Process and a Thread to a Junior Engineer."
-                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span className={styles.promptLabel}>Current Drill</span>
+                    <button onClick={nextPrompt} style={{ background: 'transparent', border: 'none', color: 'var(--accent-blue)', fontSize: '0.75rem', fontWeight: 600 }}>NEXT PROMPT</button>
+                  </div>
+                  <p className={styles.promptText}>"{currentPrompt}"</p>
                 </div>
 
                 <div className={styles.recordCircle} onClick={() => setIsRecording(!isRecording)}>
@@ -53,11 +93,12 @@ export default function SpeakingPage() {
                   <button 
                     className="glass-card" 
                     style={{ padding: '12px 24px', background: 'var(--accent-blue)', border: 'none', color: 'white', fontWeight: 600 }}
-                    onClick={() => { setIsRecording(false); setHasTranscript(true); }}
+                    onClick={handleFinish}
                   >
                     Finish & Analyze
                   </button>
                 )}
+                {loading && <RefreshCw size={24} className="animate-spin" color="var(--accent-blue)" />}
               </>
             ) : (
               <div style={{ width: '100%' }}>
@@ -65,31 +106,27 @@ export default function SpeakingPage() {
                   <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <MessageSquare size={18} /> Analysis Results
                   </h3>
-                  <button onClick={() => setHasTranscript(false)} style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <RotateCcw size={14} /> Reset
+                  <button onClick={() => setSession(null)} style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '4px', background: 'transparent', border: 'none' }}>
+                    <RotateCcw size={14} /> New Drill
                   </button>
                 </div>
 
                 <div className={styles.transcript}>
-                  "So <span className={styles.fillerWord}>um</span>, basically a process is like an isolated instance of an application, <span className={styles.fillerWord}>right?</span> And <span className={styles.fillerWord}>like</span>, threads are components inside that process that share the same memory space. <span className={styles.fillerWord}>Uh</span>, that makes them faster for context switching."
+                  "{session.transcript}"
                 </div>
 
                 <div className={styles.scoreGrid} style={{ marginTop: '32px' }}>
                   <div className={`glass-card ${styles.scoreItem}`}>
                     <span className={styles.scoreLabel}>Clarity</span>
-                    <span className={styles.scoreValue} style={{ color: 'var(--accent-emerald)' }}>8.4</span>
+                    <span className={styles.scoreValue} style={{ color: 'var(--accent-emerald)' }}>{session.scores.clarity}</span>
                   </div>
                   <div className={`glass-card ${styles.scoreItem}`}>
-                    <span className={styles.scoreLabel}>Conciseness</span>
-                    <span className={styles.scoreValue} style={{ color: 'var(--accent-amber)' }}>6.2</span>
+                    <span className={styles.scoreLabel}>Pacing</span>
+                    <span className={styles.scoreValue} style={{ color: 'var(--accent-blue)' }}>{session.scores.pacing}</span>
                   </div>
                   <div className={`glass-card ${styles.scoreItem}`}>
-                    <span className={styles.scoreLabel}>Confidence</span>
-                    <span className={styles.scoreValue} style={{ color: 'var(--accent-blue)' }}>7.8</span>
-                  </div>
-                  <div className={`glass-card ${styles.scoreItem}`}>
-                    <span className={styles.scoreLabel}>Filler Words</span>
-                    <span className={styles.scoreValue} style={{ color: 'var(--accent-rose)' }}>4</span>
+                    <span className={styles.scoreLabel}>Filler</span>
+                    <span className={styles.scoreValue} style={{ color: session.scores.filler === 'Low' ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>{session.scores.filler}</span>
                   </div>
                 </div>
               </div>
@@ -102,8 +139,7 @@ export default function SpeakingPage() {
               <span style={{ fontWeight: 600 }}>Speaking Coach Insight</span>
             </div>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              "Your explanation of shared memory was accurate, but you used 4 filler words in 20 seconds. 
-              Try to pause for 1 second instead of saying 'um' when transitioning between points."
+              {session?.feedback || "Start a drill to receive personalized feedback on your technical articulation."}
             </p>
           </div>
         </div>
@@ -115,15 +151,17 @@ export default function SpeakingPage() {
               <span style={{ fontWeight: 600 }}>Drill History</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {[1, 2, 3].map(i => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid var(--border-subtle)' }}>
-                  <div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>Explain B-Trees</div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>Apr 24, 2026</div>
+              {history.length > 0 ? history.map((item: any) => (
+                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <div style={{ maxWidth: '70%' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.topic}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>{new Date(item.createdAt).toLocaleDateString()}</div>
                   </div>
-                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--accent-blue)' }}>8.1</span>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--accent-blue)' }}>{item.scores?.clarity || 'N/A'}</span>
                 </div>
-              ))}
+              )) : (
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>No history yet.</p>
+              )}
             </div>
           </div>
 

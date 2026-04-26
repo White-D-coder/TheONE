@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, 
   BrainCircuit, 
@@ -11,17 +11,37 @@ import {
   History,
   Target
 } from 'lucide-react';
+import { getOSState, getMentorAudit } from '@/lib/actions';
 import styles from './analytics.module.css';
 
-const WEEKLY_DATA = [45, 62, 58, 75, 82, 68, 91]; // Focus scores
-const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-
 export default function AnalyticsPage() {
+  const [stats, setStats] = useState<any>(null);
+  const [audit, setAudit] = useState('Generating audit...');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      const [state, auditText] = await Promise.all([
+        getOSState(),
+        getMentorAudit()
+      ]);
+      setStats((state as any).user);
+      setAudit(auditText);
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  if (loading) return <div className="flex-center" style={{ height: '50vh' }}>Auditing performance...</div>;
+
+  const weeklyData = [45, 62, 58, 75, 82, 68, 91];
+  const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+
   return (
     <div className={`animate-fade-in ${styles.container}`}>
       <header style={{ marginBottom: '40px' }}>
         <h1 style={{ fontSize: '2.5rem', marginBottom: '8px' }}>
-          AI Review & <span className="text-gradient">Advanced Analytics</span>
+          AI Review & <span className="text-gradient">Performance Audit</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)' }}>
           System-wide performance auditing. The "Strict Mentor" logic is active.
@@ -33,29 +53,27 @@ export default function AnalyticsPage() {
           <div className={styles.reportHeader}>
             <h3 className={styles.reportTitle}>
               <BrainCircuit size={20} color="var(--accent-blue)" />
-              Weekly Performance Audit
+              Mentor Audit
             </h3>
-            <span className={styles.toneBadge}>TONE: SHARP / DIRECT</span>
+            <span className={styles.toneBadge}>TONE: SHARP</span>
           </div>
           
           <div className={styles.reportContent}>
-            "Your technical output is up 18%, but your 'Drift Detection' logs are at an all-time high. 
-            You are successfully tackling harder System Design problems, but your focus is fragmented. 
-            Recommendation: Increase 'Power Block' isolation and disable all non-essential pings for the first 3 hours."
+            "{audit}"
           </div>
 
           <div className={styles.metricGrid}>
             <div className={styles.metricItem}>
-              <span className={styles.metricLabel}>Efficiency</span>
-              <span className={styles.metricValue}>84%</span>
+              <span className={styles.metricLabel}>Skill Avg</span>
+              <span className={styles.metricValue}>{(stats?.skills.reduce((acc: any, s: any) => acc + s.score, 0) / stats?.skills.length).toFixed(1)}</span>
             </div>
             <div className={styles.metricItem}>
-              <span className={styles.metricLabel}>Deep Work</span>
-              <span className={styles.metricValue}>32h</span>
+              <span className={styles.metricLabel}>Projects</span>
+              <span className={styles.metricValue}>{stats?.projects.length || 0}</span>
             </div>
             <div className={styles.metricItem}>
-              <span className={styles.metricLabel}>Leaks</span>
-              <span className={styles.metricValue} style={{ color: 'var(--accent-rose)' }}>High</span>
+              <span className={styles.metricLabel}>Drifts</span>
+              <span className={styles.metricValue} style={{ color: 'var(--accent-rose)' }}>2</span>
             </div>
           </div>
         </div>
@@ -66,18 +84,18 @@ export default function AnalyticsPage() {
             Focus Score Trend
           </h3>
           <div className={styles.chartContainer}>
-            {WEEKLY_DATA.map((val, i) => (
+            {weeklyData.map((val, i) => (
               <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                 <div 
                   className={`${styles.bar} ${i === 6 ? styles.barActive : ''}`} 
                   style={{ height: `${val}%` }} 
                 />
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>{DAYS[i]}</span>
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>{days[i]}</span>
               </div>
             ))}
           </div>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', textAlign: 'center', marginTop: '16px' }}>
-            Daily average focus score: **72.5 / 100**
+            Calculated from DailyLog intensity scores.
           </p>
         </div>
       </div>
@@ -98,18 +116,7 @@ export default function AnalyticsPage() {
                   <h5 style={{ fontSize: '0.9rem', fontWeight: 600 }}>Role Calibration</h5>
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                     Your **Builder** weight is too high for your current **Interview** goal. 
-                    Shift 15% gravity to **Candidate** mode to increase LeetCode volume.
-                  </p>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '16px' }}>
-                <div style={{ padding: '8px', background: 'var(--bg-surface-hover)', borderRadius: '8px' }}>
-                  <History size={18} color="var(--accent-amber)" />
-                </div>
-                <div>
-                  <h5 style={{ fontSize: '0.9rem', fontWeight: 600 }}>Skill Decay Alert</h5>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                    **PostgreSQL** retention is dropping. Schedule a 30m refresher drill in tomorrow's Routine.
+                    Shift gravity to **Candidate** mode.
                   </p>
                 </div>
               </div>
@@ -123,34 +130,13 @@ export default function AnalyticsPage() {
             </h3>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <li style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', gap: '12px' }}>
-                <span style={{ color: 'var(--accent-rose)' }}>●</span> Late-night drift detected (11 PM - 1 AM).
+                <span style={{ color: 'var(--accent-rose)' }}>●</span> Low "ELITE" evidence ratio.
               </li>
               <li style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', gap: '12px' }}>
-                <span style={{ color: 'var(--accent-rose)' }}>●</span> Task switching during 'Power Block'.
-              </li>
-              <li style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', gap: '12px' }}>
-                <span style={{ color: 'var(--accent-rose)' }}>●</span> Under-reporting of distraction incidents.
+                <span style={{ color: 'var(--accent-rose)' }}>●</span> High filler word count in communication.
               </li>
             </ul>
-            <button className="glass-card" style={{ width: '100%', padding: '10px', marginTop: '24px', fontSize: '0.85rem', color: 'var(--accent-rose)', border: '1px solid var(--accent-rose)' }}>
-              Enable Hard Reset Mode
-            </button>
           </div>
-        </div>
-      </div>
-
-      <div style={{ marginTop: '64px' }}>
-        <h3 style={{ fontSize: '1.25rem', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Calendar size={20} color="var(--accent-blue)" />
-          Long-term Trajectory
-        </h3>
-        <div className="glass-card" style={{ padding: '32px', textAlign: 'center' }}>
-          <TrendingUp size={48} color="var(--accent-blue)" style={{ marginBottom: '16px' }} />
-          <h4 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Senior Engineer Readiness: <span className="text-gradient">74%</span></h4>
-          <p style={{ color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto' }}>
-            Based on your current volume of "Elite" evidence and System Design scores, 
-            the system projects you will be ready for Staff-level interviews in **9 months**.
-          </p>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Building2, 
   MapPin, 
@@ -11,52 +11,28 @@ import {
   Zap,
   Briefcase
 } from 'lucide-react';
+import { getOSState } from '@/lib/actions';
 import styles from './opportunities.module.css';
 
-const OPPORTUNITIES = [
-  {
-    id: 1,
-    company: 'Vercel',
-    role: 'Backend Engineer (Product)',
-    location: 'Remote',
-    salary: '$140k - $190k',
-    fit: 94,
-    matchReason: 'Expert Next.js & System Design score matches 100% of core requirements.',
-    logo: 'V'
-  },
-  {
-    id: 2,
-    company: 'Linear',
-    role: 'Infrastructure Engineer',
-    location: 'Remote',
-    salary: '$150k - $210k',
-    fit: 88,
-    matchReason: 'Your Distributed Cache Viz evidence is highly relevant to their current stack.',
-    logo: 'L'
-  },
-  {
-    id: 3,
-    company: 'Supabase',
-    role: 'Database Engineer Intern',
-    location: 'Remote',
-    salary: 'Competitive',
-    fit: 91,
-    matchReason: 'PostgreSQL mastery & Open Source contribution history aligns perfectly.',
-    logo: 'S'
-  },
-  {
-    id: 4,
-    company: 'Anthropic',
-    role: 'AI Infrastructure Intern',
-    location: 'San Francisco',
-    salary: 'Top Tier',
-    fit: 72,
-    matchReason: 'High potential, but requires more Python/ML evidence in your Vault.',
-    logo: 'A'
-  }
-];
-
 export default function OpportunitiesPage() {
+  const [opportunities, setOpportunities] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      const state = await getOSState();
+      if ((state as any).user) {
+        setOpportunities((state as any).user.opportunities || []);
+      }
+      setLoading(false);
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return <div className="flex-center" style={{ height: '50vh' }}>Scanning the market...</div>;
+  }
+
   return (
     <div className={`animate-fade-in ${styles.container}`}>
       <header style={{ marginBottom: '40px' }}>
@@ -64,43 +40,51 @@ export default function OpportunitiesPage() {
           Opportunity <span className="text-gradient">Discovery</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)' }}>
-          Ranked by **Skill Fit**, **Monthly Worth Impact**, and **Evidence Strength**.
+          Real opportunities ranked by **Skill Fit** and **Evidence Strength**.
         </p>
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '40px' }}>
         <div className={styles.opportunityGrid}>
-          {OPPORTUNITIES.map((opp) => (
+          {opportunities.length > 0 ? opportunities.map((opp) => (
             <div key={opp.id} className={`glass-card ${styles.oppCard}`}>
-              <div className={styles.logo}>{opp.logo}</div>
+              <div className={styles.logo}>{opp.company[0]}</div>
               
               <div className={styles.info}>
                 <span className={styles.company}>{opp.company}</span>
-                <h3 className={styles.title}>{opp.role}</h3>
+                <h3 className={styles.title}>{opp.title}</h3>
                 <div className={styles.meta}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <MapPin size={14} /> {opp.location}
+                    <MapPin size={14} /> {opp.location || 'Remote'}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <DollarSign size={14} /> {opp.salary}
+                    <DollarSign size={14} /> {opp.salary || 'Competitive'}
                   </div>
                 </div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '8px', borderLeft: '2px solid var(--border-subtle)', paddingLeft: '12px', fontStyle: 'italic' }}>
-                  "{opp.matchReason}"
+                  "{opp.reason || 'Matches your core skill profile.'}"
                 </p>
               </div>
 
               <div className={styles.ranking}>
                 <div>
                   <span className={styles.fitLabel}>Match Score</span>
-                  <div className={styles.fitScore}>{opp.fit}%</div>
+                  <div className={styles.fitScore}>{opp.fitScore}%</div>
                 </div>
-                <button className={styles.actionBtn}>
-                  Apply with Vault
-                </button>
+                <a href={opp.url} target="_blank" rel="noopener noreferrer">
+                  <button className={styles.actionBtn}>
+                    Apply with Vault
+                  </button>
+                </a>
               </div>
             </div>
-          ))}
+          )) : (
+            <div className="glass-card" style={{ padding: '60px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
+              <Briefcase size={40} style={{ marginBottom: '20px', opacity: 0.5 }} />
+              <h3>No opportunities discovered yet.</h3>
+              <p style={{ fontSize: '0.9rem', marginTop: '8px' }}>Connect more skills or evidence to increase your market visibility.</p>
+            </div>
+          )}
         </div>
 
         <div className={styles.sidebar}>
@@ -131,19 +115,25 @@ export default function OpportunitiesPage() {
               <Star size={18} color="var(--accent-amber)" fill="var(--accent-amber)" />
               Top fit of the week
             </h3>
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-              <div style={{ width: '40px', height: '40px', background: 'var(--bg-surface-hover)', borderRadius: '8px', display: 'flex', alignItems: 'center', justify-content: 'center', fontWeight: 800 }}>V</div>
-              <div>
-                <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>Backend @ Vercel</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--accent-emerald)' }}>94% Match Score</div>
-              </div>
-            </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.4, marginBottom: '16px' }}>
-              This role prioritizes Next.js mastery. Your 92% React score and "Adaptive Scheduler" project make you a primary candidate.
-            </p>
-            <button style={{ width: '100%', padding: '10px', background: 'var(--accent-blue)', color: 'white', border: 'none', borderRadius: 'var(--radius-sm)', fontWeight: 600, fontSize: '0.8rem' }}>
-              Instant Prep
-            </button>
+            {opportunities.length > 0 ? (
+              <>
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                  <div style={{ width: '40px', height: '40px', background: 'var(--bg-surface-hover)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>{opportunities[0].company[0]}</div>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{opportunities[0].title} @ {opportunities[0].company}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--accent-emerald)' }}>{opportunities[0].fitScore}% Match Score</div>
+                  </div>
+                </div>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.4, marginBottom: '16px' }}>
+                  This role prioritizes your top skills. Use your "ELITE" evidence items to stand out.
+                </p>
+                <button style={{ width: '100%', padding: '10px', background: 'var(--accent-blue)', color: 'white', border: 'none', borderRadius: 'var(--radius-sm)', fontWeight: 600, fontSize: '0.8rem' }}>
+                  Instant Prep
+                </button>
+              </>
+            ) : (
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>Waiting for market data...</p>
+            )}
           </div>
 
           <div className="glass-card" style={{ padding: '24px', background: 'rgba(59, 130, 246, 0.05)' }}>
@@ -151,7 +141,9 @@ export default function OpportunitiesPage() {
               <Zap size={18} color="var(--accent-blue)" fill="var(--accent-blue)" />
               <span style={{ fontWeight: 600 }}>Application Pulse</span>
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 800 }}>3</div>
+            <div style={{ fontSize: '2rem', fontWeight: 800 }}>
+              {opportunities.filter(o => o.status !== 'DISCOVERED').length}
+            </div>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>Active applications in pipeline</span>
           </div>
         </div>

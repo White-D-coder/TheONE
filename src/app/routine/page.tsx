@@ -13,7 +13,7 @@ import {
   BrainCircuit,
   RefreshCw
 } from 'lucide-react';
-import { generateRoutine, getOSState } from '@/lib/actions';
+import { generateRoutine, getOSState, completeRoutineBlock } from '@/lib/actions';
 import styles from './routine.module.css';
 
 export default function RoutinePage() {
@@ -44,8 +44,17 @@ export default function RoutinePage() {
     );
   }
 
-  const primaryRole = Object.entries(state.roles)
-    .sort(([, a]: any, [, b]: any) => b - a)[0][0];
+  const handleCompleteBlock = async (block: any) => {
+    setIsCompleting(block.label);
+    await completeRoutineBlock(block.label, typeof block.duration === 'string' ? parseInt(block.duration) : block.duration);
+    await fetchData();
+    setIsCompleting(null);
+  };
+
+  const [isCompleting, setIsCompleting] = useState<string | null>(null);
+
+  const primaryRole = state ? Object.entries(state.roles)
+    .sort(([, a]: any, [, b]: any) => b - a)[0][0] : 'Engineer';
 
   return (
     <div className={`animate-fade-in ${styles.container}`}>
@@ -81,7 +90,7 @@ export default function RoutinePage() {
             </div>
             <div>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Deep Work</span>
-              <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>5.2h</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{schedule.filter(b => b.status === 'DONE').length * 1.5}h</div>
             </div>
             <div>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Focus Score</span>
@@ -112,7 +121,7 @@ export default function RoutinePage() {
                 </div>
                 <div className={styles.meta}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Clock size={14} /> {block.duration}
+                    <Clock size={14} /> {block.duration}m
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: block.color }} />
@@ -122,29 +131,22 @@ export default function RoutinePage() {
               </div>
 
               <div className={styles.actions}>
-                {block.status === 'DONE' && <CheckCircle2 size={20} color="var(--accent-emerald)" />}
-                {block.status === 'LOCKED' && <Lock size={20} color="var(--text-tertiary)" />}
-                {block.status === 'PENDING' && (
-                  <>
+                {block.status === 'DONE' ? (
+                  <CheckCircle2 size={20} color="var(--accent-emerald)" />
+                ) : block.status === 'LOCKED' ? (
+                  <Lock size={20} color="var(--text-tertiary)" />
+                ) : (
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button 
+                      onClick={() => handleCompleteBlock(block)}
+                      disabled={isCompleting === block.label}
+                      className={styles.actionBtn} 
+                      style={{ color: 'var(--accent-emerald)', background: 'rgba(16, 185, 129, 0.1)', borderColor: 'rgba(16, 185, 129, 0.2)' }}
+                    >
+                      {isCompleting === block.label ? <RefreshCw size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                    </button>
                     <button className={styles.actionBtn}><Play size={16} /></button>
-                    <button className={styles.actionBtn}><MoreVertical size={16} /></button>
-                  </>
-                )}
-                {block.status === 'ACTIVE' && (
-                  <button style={{ 
-                    padding: '8px 16px', 
-                    background: 'var(--accent-blue)', 
-                    border: 'none', 
-                    borderRadius: 'var(--radius-sm)',
-                    color: 'white',
-                    fontWeight: 600,
-                    fontSize: '0.8rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}>
-                    <Play size={14} fill="white" /> Resume Session
-                  </button>
+                  </div>
                 )}
               </div>
             </div>

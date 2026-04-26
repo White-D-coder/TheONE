@@ -12,7 +12,7 @@ import {
   AlertTriangle,
   Save
 } from 'lucide-react';
-import { updateRoles, updateMode } from '@/lib/actions';
+import { updateRoles, updateMode, getOSState } from '@/lib/actions';
 import styles from './identity.module.css';
 
 const MODES = [
@@ -33,6 +33,23 @@ export default function IdentityPage() {
   const [currentMode, setCurrentMode] = useState('NORMAL');
   const [roles, setRoles] = useState(INITIAL_ROLES);
   const [isSaving, setIsSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    async function load() {
+      const state = await getOSState();
+      if ((state as any).user) {
+        setCurrentMode(state.currentMode);
+        const weights = state.roles as any;
+        setRoles(prev => prev.map(r => ({
+          ...r,
+          weight: weights[r.id] || r.weight
+        })));
+      }
+      setLoading(false);
+    }
+    load();
+  }, []);
 
   const handleWeightChange = (id: string, weight: number) => {
     setRoles(roles.map(r => r.id === id ? { ...r, weight } : r));
@@ -50,6 +67,8 @@ export default function IdentityPage() {
     setIsSaving(false);
     alert('Identity Rebalanced. Routine gravity updated.');
   };
+
+  if (loading) return <div className="flex-center" style={{ height: '50vh' }}>Calibrating Identity...</div>;
 
   return (
     <div className={`animate-fade-in ${styles.container}`}>

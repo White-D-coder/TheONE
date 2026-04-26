@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Play, 
   Clock, 
@@ -10,79 +10,43 @@ import {
   Lock,
   Zap,
   Coffee,
-  BrainCircuit
+  BrainCircuit,
+  RefreshCw
 } from 'lucide-react';
+import { generateRoutine, getOSState } from '@/lib/actions';
 import styles from './routine.module.css';
 
-const SCHEDULE = [
-  { 
-    time: '06:00', 
-    label: 'Deep Sleep Baseline', 
-    duration: '7h (Complete)', 
-    type: 'REST', 
-    color: 'var(--text-tertiary)',
-    status: 'DONE'
-  },
-  { 
-    time: '07:30', 
-    label: 'Physical Prime', 
-    duration: '45m', 
-    type: 'BODY', 
-    color: 'var(--accent-emerald)',
-    status: 'DONE'
-  },
-  { 
-    time: '09:00', 
-    label: 'Power Block: System Design', 
-    duration: '180m', 
-    type: 'ENGINEER', 
-    color: 'var(--accent-blue)',
-    status: 'ACTIVE',
-    tag: 'HIGH GRAVITY'
-  },
-  { 
-    time: '12:00', 
-    label: 'Maintenance & Nutrition', 
-    duration: '60m', 
-    type: 'REST', 
-    color: 'var(--text-tertiary)',
-    status: 'PENDING'
-  },
-  { 
-    time: '13:00', 
-    label: 'Execution: Feature Implementation', 
-    duration: '120m', 
-    type: 'BUILDER', 
-    color: 'var(--accent-purple)',
-    status: 'PENDING'
-  },
-  { 
-    time: '15:30', 
-    label: 'Speaking Lab: Pitch Drills', 
-    duration: '30m', 
-    type: 'COMMUNICATOR', 
-    color: 'var(--accent-amber)',
-    status: 'PENDING'
-  },
-  { 
-    time: '16:00', 
-    label: 'Opportunity Hunt', 
-    duration: '45m', 
-    type: 'CANDIDATE', 
-    color: 'var(--accent-rose)',
-    status: 'PENDING'
-  },
-  { 
-    time: '17:00', 
-    label: 'Daily Review & Strategy', 
-    duration: '20m', 
-    type: 'AI_REVIEW', 
-    color: 'var(--text-primary)',
-    status: 'LOCKED'
-  }
-];
-
 export default function RoutinePage() {
+  const [schedule, setSchedule] = useState<any[]>([]);
+  const [state, setState] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const [routineData, osState] = await Promise.all([
+      generateRoutine(),
+      getOSState()
+    ]);
+    setSchedule(routineData);
+    setState(osState);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className={styles.container} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+        <RefreshCw className="animate-spin" size={48} color="var(--accent-blue)" />
+      </div>
+    );
+  }
+
+  const primaryRole = Object.entries(state.roles)
+    .sort(([, a]: any, [, b]: any) => b - a)[0][0];
+
   return (
     <div className={`animate-fade-in ${styles.container}`}>
       <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
@@ -91,14 +55,18 @@ export default function RoutinePage() {
             Adaptive <span className="text-gradient">Routine Engine</span>
           </h1>
           <p style={{ color: 'var(--text-secondary)' }}>
-            Schedule optimized for **Engineer (60%)** and **Builder (40%)** role weights.
+            Schedule optimized for **{primaryRole.toUpperCase()}** priorities in **{state.currentMode}** mode.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button className="glass-card" style={{ padding: '10px 20px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Calendar size={16} /> Weekly Plan
           </button>
-          <button className="glass-card" style={{ padding: '10px 20px', fontSize: '0.9rem', background: 'var(--grad-primary)', border: 'none', color: 'white', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button 
+            onClick={fetchData}
+            className="glass-card" 
+            style={{ padding: '10px 20px', fontSize: '0.9rem', background: 'var(--grad-primary)', border: 'none', color: 'white', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
             <Zap size={16} /> Force Sync
           </button>
         </div>
@@ -128,7 +96,7 @@ export default function RoutinePage() {
       </div>
 
       <div className={styles.timeline}>
-        {SCHEDULE.map((block, i) => (
+        {schedule.map((block, i) => (
           <div key={i} className={styles.block}>
             <div className={styles.time}>{block.time}</div>
             <div className={styles.dot + ' ' + (block.status === 'ACTIVE' ? styles.activeDot : '')} />

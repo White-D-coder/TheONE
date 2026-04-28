@@ -1,44 +1,33 @@
 .header {
-  height: var(--header-height);
-  position: sticky;
-  top: 0;
-  left: var(--sidebar-width);
-  right: 0;
-  padding: 0 32px;
+  height: 80px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  z-index: 40;
-  background: rgba(10, 10, 11, 0.8);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-subtle);
+  align-items: center;
+  padding: 0 40px;
+  background: transparent;
 }
 
 .left {
   display: flex;
   align-items: center;
-  gap: 24px;
 }
 
 .modeIndicator {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 100px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--accent-emerald);
+  gap: 10px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-tertiary);
+  letter-spacing: 0.05em;
 }
 
 .pulse {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   background: var(--accent-emerald);
   border-radius: 50%;
-  box-shadow: 0 0 8px var(--accent-emerald);
+  box-shadow: 0 0 10px var(--accent-emerald);
   animation: pulse 2s infinite;
 }
 
@@ -58,21 +47,20 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  padding-right: 16px;
-  border-right: 1px solid var(--border-subtle);
+  margin-right: 24px;
 }
 
 .worthLabel {
-  font-size: 0.7rem;
-  color: var(--text-tertiary);
+  font-size: 0.65rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
 }
 
 .worthValue {
   font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-primary);
+  font-weight: 800;
+  color: white;
 }
 
 .iconButton {
@@ -81,13 +69,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  background: var(--bg-surface);
+  border-radius: 10px;
   border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .iconButton:hover {
-  background: var(--bg-surface-hover);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-strong);
+  color: white;
+  transform: translateY(-2px);
 }

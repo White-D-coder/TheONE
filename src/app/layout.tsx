@@ -20,16 +20,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${mono.variable}`}>
-        <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <div style={{ display: 'flex', minHeight: '100vh', gap: '16px' }}>
           <Sidebar />
           <div style={{ 
             flex: 1, 
-            marginLeft: 'var(--sidebar-width)', 
             display: 'flex', 
-            flexDirection: 'column' 
+            flexDirection: 'column',
+            paddingRight: '32px'
           }}>
             <Header />
-            <main style={{ padding: '32px', flex: 1 }}>
+            <main style={{ padding: '32px 0', flex: 1 }}>
               {children}
             </main>
           </div>

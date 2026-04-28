@@ -102,3 +102,58 @@
   border-left: 4px solid var(--accent-blue);
   background: rgba(59, 130, 246, 0.05);
 }
+
+.scoreBadge {
+  background: var(--grad-primary);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.subTitle {
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  font-weight: 800;
+  margin-bottom: 12px;
+  opacity: 0.8;
+}
+
+.summaryText {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.reportList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reportList li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.strategyBox {
+  margin-top: 32px;
+  padding: 16px 24px;
+  background: var(--bg-surface-hover);
+  border-left: 3px solid var(--accent-blue);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.9rem;
+}
+
+.mainContent {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 32px;
+}

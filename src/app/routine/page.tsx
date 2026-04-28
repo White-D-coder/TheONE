@@ -13,13 +13,15 @@ import {
   BrainCircuit,
   RefreshCw
 } from 'lucide-react';
-import { generateRoutine, getOSState, completeRoutineBlock } from '@/lib/actions';
+import { generateRoutine, getOSState, completeRoutineBlock, logDrift } from '@/lib/actions';
 import styles from './routine.module.css';
 
 export default function RoutinePage() {
   const [schedule, setSchedule] = useState<any[]>([]);
   const [state, setState] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isCompleting, setIsCompleting] = useState<string | null>(null);
+  const [activeTimer, setActiveTimer] = useState<{ label: string; seconds: number } | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -36,13 +38,21 @@ export default function RoutinePage() {
     fetchData();
   }, []);
 
-  if (loading) {
-    return (
-      <div className={styles.container} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-        <RefreshCw className="animate-spin" size={48} color="var(--accent-blue)" />
-      </div>
-    );
-  }
+  useEffect(() => {
+    let interval: any;
+    if (activeTimer) {
+      interval = setInterval(() => {
+        setActiveTimer(prev => prev ? { ...prev, seconds: prev.seconds + 1 } : null);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [activeTimer]);
+
+  const formatTime = (s: number) => {
+    const mins = Math.floor(s / 60);
+    const secs = s % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleCompleteBlock = async (block: any) => {
     setIsCompleting(block.label);
@@ -51,7 +61,13 @@ export default function RoutinePage() {
     setIsCompleting(null);
   };
 
-  const [isCompleting, setIsCompleting] = useState<string | null>(null);
+  if (loading) {
+    return (
+      <div className={styles.container} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+        <RefreshCw className="animate-spin" size={48} color="var(--accent-blue)" />
+      </div>
+    );
+  }
 
   const primaryRole = state ? Object.entries(state.roles)
     .sort(([, a]: any, [, b]: any) => b - a)[0][0] : 'Engineer';
@@ -128,6 +144,12 @@ export default function RoutinePage() {
                     {block.type}
                   </div>
                 </div>
+                {block.target && (
+                  <div style={{ marginTop: '12px', padding: '12px 16px', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '8px', fontSize: '0.85rem', border: '1px dashed rgba(59, 130, 246, 0.3)', color: 'white', fontWeight: 500 }}>
+                    <span style={{ fontWeight: 800, color: 'var(--accent-blue)', marginRight: '8px', fontSize: '0.7rem', letterSpacing: '0.05em' }}>AI TARGET:</span>
+                    {block.target}
+                  </div>
+                )}
               </div>
 
               <div className={styles.actions}>
@@ -145,7 +167,13 @@ export default function RoutinePage() {
                     >
                       {isCompleting === block.label ? <RefreshCw size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
                     </button>
-                    <button className={styles.actionBtn}><Play size={16} /></button>
+                    <button 
+                      onClick={() => setActiveTimer({ label: block.label, seconds: 0 })}
+                      className={styles.actionBtn}
+                      style={{ background: activeTimer?.label === block.label ? 'var(--accent-blue)' : 'transparent', color: activeTimer?.label === block.label ? 'white' : 'inherit' }}
+                    >
+                      {activeTimer?.label === block.label ? formatTime(activeTimer.seconds) : <Play size={16} />}
+                    </button>
                   </div>
                 )}
               </div>

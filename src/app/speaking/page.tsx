@@ -25,10 +25,12 @@ const PROMPTS = [
 export default function SpeakingPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [session, setSession] = useState<any>(null);
-  const [transcript, setTranscript] = useState("So um, basically a process is like an isolated instance, right? And like, threads share the same memory.");
+  const [transcript, setTranscript] = useState("");
+  const [interimTranscript, setInterimTranscript] = useState("");
   const [currentPrompt, setCurrentPrompt] = useState(PROMPTS[0]);
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [recognition, setRecognition] = useState<any>(null);
 
   const fetchHistory = async () => {
     const state = await getOSState();
@@ -39,12 +41,57 @@ export default function SpeakingPage() {
 
   useEffect(() => {
     fetchHistory();
+    
+    // Initialize Web Speech API
+    if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'speechRecognition' in window)) {
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).speechRecognition;
+      const recog = new SpeechRecognition();
+      recog.continuous = true;
+      recog.interimResults = true;
+      recog.lang = 'en-US';
+
+      recog.onresult = (event: any) => {
+        let final = '';
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            final += event.results[i][0].transcript;
+          } else {
+            interim += event.results[i][0].transcript;
+          }
+        }
+        setTranscript(prev => prev + final);
+        setInterimTranscript(interim);
+      };
+
+      recog.onend = () => {
+        // Recognition might stop automatically, we should handle state
+      };
+
+      setRecognition(recog);
+    }
   }, []);
 
+  const toggleRecording = () => {
+    if (isRecording) {
+      recognition?.stop();
+      setIsRecording(false);
+    } else {
+      setTranscript("");
+      setInterimTranscript("");
+      recognition?.start();
+      setIsRecording(true);
+    }
+  };
+
   const handleFinish = async () => {
+    recognition?.stop();
     setIsRecording(false);
     setLoading(true);
-    const result = await saveSpeakingSession(currentPrompt, transcript);
+    
+    // Use the actual transcript if available, otherwise fallback to the dummy one
+    const finalTranscript = transcript || "So um, basically I didn't say anything, but I'm practicing the UI.";
+    const result = await saveSpeakingSession(currentPrompt, finalTranscript);
     setSession(result);
     await fetchHistory();
     setLoading(false);
@@ -54,6 +101,8 @@ export default function SpeakingPage() {
     const nextIdx = (PROMPTS.indexOf(currentPrompt) + 1) % PROMPTS.length;
     setCurrentPrompt(PROMPTS[nextIdx]);
     setSession(null);
+    setTranscript("");
+    setInterimTranscript("");
   };
 
   return (
@@ -80,14 +129,21 @@ export default function SpeakingPage() {
                   <p className={styles.promptText}>"{currentPrompt}"</p>
                 </div>
 
-                <div className={styles.recordCircle} onClick={() => setIsRecording(!isRecording)}>
+                <div className={styles.recordCircle} onClick={toggleRecording}>
                   {isRecording && <div className={styles.recordingPulse} />}
                   {isRecording ? <Square size={40} color="var(--accent-rose)" fill="var(--accent-rose)" /> : <Mic size={40} color="var(--text-primary)" />}
                 </div>
 
-                <p style={{ color: isRecording ? 'var(--accent-rose)' : 'var(--text-tertiary)', fontWeight: 600 }}>
-                  {isRecording ? 'RECORDING ACTIVE...' : 'TAP TO START DRILL'}
-                </p>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ color: isRecording ? 'var(--accent-rose)' : 'var(--text-tertiary)', fontWeight: 600, marginBottom: '8px' }}>
+                    {isRecording ? 'RECORDING ACTIVE...' : 'TAP TO START DRILL'}
+                  </p>
+                  {isRecording && (
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontStyle: 'italic', maxWidth: '300px', margin: '0 auto' }}>
+                      {transcript} <span style={{ opacity: 0.5 }}>{interimTranscript}</span>
+                    </div>
+                  )}
+                </div>
 
                 {isRecording && (
                   <button 
@@ -132,6 +188,7 @@ export default function SpeakingPage() {
               </div>
             )}
           </div>
+
 
           <div className="glass-card" style={{ padding: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>

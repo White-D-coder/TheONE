@@ -109,3 +109,44 @@
   background: var(--bg-surface-hover);
   border-radius: 4px;
 }
+
+.syncInput {
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  color: white;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.syncInput:focus {
+  border-color: var(--accent-blue);
+}
+
+.syncBtn {
+  padding: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.syncBtn:hover {
+  background: var(--bg-surface-hover);
+  color: white;
+  border-color: var(--text-secondary);
+}
+
+.syncBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

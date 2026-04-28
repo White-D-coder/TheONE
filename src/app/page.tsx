@@ -5,7 +5,13 @@ import {
   FileCode2, 
   Mic2, 
   ShieldCheck,
-  ArrowUpRight
+  ArrowUpRight,
+  Code,
+  Trophy,
+  Terminal,
+  FileText,
+  Play,
+  Send
 } from 'lucide-react';
 import { StatCard, ProgressCard, InsightCard } from '@/components/ui/DashboardCards';
 import { getOSState, getDashboardStats } from '@/lib/actions';
@@ -33,14 +39,35 @@ export default async function Dashboard() {
   const user = state.user;
 
   return (
-    <div className="animate-fade-in">
-      <header style={{ marginBottom: '40px' }}>
-        <h1 style={{ fontSize: '2.5rem', marginBottom: '8px' }}>
+    <div className="animate-slide-up">
+      <header style={{ marginBottom: '48px', position: 'relative' }}>
+        <div style={{ position: 'absolute', top: '-100px', left: '-50px', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(0, 112, 243, 0.1) 0%, transparent 70%)', zIndex: -1 }}></div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
+          <span style={{ fontSize: '0.7rem', fontWeight: 800, background: 'rgba(0, 255, 189, 0.1)', color: 'var(--accent-emerald)', padding: '4px 12px', borderRadius: '20px', border: '1px solid rgba(0, 255, 189, 0.2)' }}>SYSTEM ONLINE</span>
+          <span style={{ fontSize: '0.7rem', fontWeight: 800, background: 'rgba(59, 130, 246, 0.1)', color: 'var(--accent-blue)', padding: '4px 12px', borderRadius: '20px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>MODE: {state.currentMode}</span>
+        </div>
+        <h1 style={{ fontSize: '3.5rem', fontWeight: 800, marginBottom: '8px', letterSpacing: '-0.04em' }}>
           Welcome back, <span className="text-gradient">{user?.name || 'Engineer'}</span>
         </h1>
-        <p style={{ color: 'var(--text-secondary)' }}>
-          System status: **Optimal**. Active Focus: **{state.currentMode}**.
+        <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', fontWeight: 500 }}>
+          Your performance is <span style={{ color: 'white', fontWeight: 600 }}>optimal</span>. You have 3 pending professional signals to verify.
         </p>
+
+        {!stats.githubConsistency?.committedToday && (
+          <div className="glass-card animate-float" style={{ marginTop: '24px', padding: '16px 24px', background: 'rgba(244, 63, 94, 0.1)', borderColor: 'rgba(244, 63, 94, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent-rose)', boxShadow: '0 0 10px var(--accent-rose)' }}></div>
+              <div>
+                <div style={{ fontWeight: 800, color: 'var(--accent-rose)', fontSize: '0.9rem' }}>CONSISTENCY CRITICAL</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>No GitHub commits detected for the current session. Ship code to maintain your streak.</div>
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>CONSISTENCY SCORE</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'white' }}>{stats.githubConsistency?.score}%</div>
+            </div>
+          </div>
+        )}
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '32px' }}>
@@ -113,6 +140,35 @@ export default async function Dashboard() {
               )}
             </div>
           </div>
+          <div className="glass-card" style={{ padding: '32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '1.25rem' }}>Professional Signal Feed</h2>
+              <span style={{ fontSize: '0.75rem', color: 'var(--accent-emerald)', fontWeight: 800 }}>LIVE SYNC ACTIVE</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {user?.evidences && user.evidences.length > 0 ? user.evidences.slice(0, 5).map((e: any) => (
+                <div key={e.id} style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '12px', background: 'var(--bg-surface-hover)', borderRadius: 'var(--radius-sm)' }}>
+                  <div style={{ padding: '8px', background: 'var(--bg-surface)', borderRadius: '8px' }}>
+                    {e.source === 'GITHUB' && <Code size={16} color="var(--accent-blue)" />}
+                    {e.source === 'LEETCODE' && <Trophy size={16} color="var(--accent-amber)" />}
+                    {e.source === 'CODEFORCES' && <Terminal size={16} color="var(--accent-purple)" />}
+                    {e.source === 'MEDIUM' && <FileText size={16} color="var(--accent-emerald)" />}
+                    {e.source === 'YOUTUBE' && <Play size={16} color="#FF0000" />}
+                    {!['GITHUB', 'LEETCODE', 'CODEFORCES', 'MEDIUM', 'YOUTUBE'].includes(e.source) && <ShieldCheck size={16} color="var(--accent-blue)" />}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{e.title}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{e.source} • {new Date(e.createdAt).toLocaleDateString()}</div>
+                  </div>
+                  <ArrowUpRight size={14} color="var(--text-tertiary)" />
+                </div>
+              )) : (
+                <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>
+                  No signals detected. Connect platforms in the Vault.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -171,6 +227,22 @@ export default async function Dashboard() {
                 <span>10m Speaking Drill</span>
               </label>
             </div>
+          </div>
+
+          <div className="glass-card" style={{ padding: '24px', background: 'rgba(59, 130, 246, 0.05)' }}>
+            <h3 style={{ fontSize: '1rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Send size={16} color="var(--accent-blue)" />
+              Application Pulse
+            </h3>
+            <div style={{ fontSize: '2rem', fontWeight: 800 }}>{stats.applicationCount}</div>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+              Active roles in pipeline.
+            </p>
+            <Link href="/applications">
+              <button className="glass-card" style={{ width: '100%', padding: '10px', marginTop: '16px', fontSize: '0.8rem' }}>
+                Manage Pipeline
+              </button>
+            </Link>
           </div>
         </div>
       </div>

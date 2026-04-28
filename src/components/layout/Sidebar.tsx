@@ -13,7 +13,9 @@ import {
   TrendingUp, 
   ShieldCheck,
   Settings,
-  Cpu
+  Cpu,
+  Send,
+  Zap
 } from 'lucide-react';
 import { getOSState } from '@/lib/actions';
 import styles from './Sidebar.module.css';
@@ -27,8 +29,9 @@ const navItems = [
   { icon: Mic2, label: 'Speaking Lab', href: '/speaking' },
   { icon: ShieldCheck, label: 'Worth Impact', href: '/worth' },
   { icon: Terminal, label: 'Knowledge Feed', href: '/content' },
-  { icon: TrendingUp, label: 'Analytics', href: '/analytics' },
+  { icon: Zap, label: 'Analytics', href: '/analytics' },
   { icon: Briefcase, label: 'Opportunities', href: '/opportunities' },
+  { icon: Send, label: 'Application Pipeline', href: '/applications' },
 ];
 
 export function Sidebar() {
@@ -74,7 +77,9 @@ export function Sidebar() {
             <span className={styles.userName}>{user?.name || 'Loading...'}</span>
             <span className={styles.userRole}>Engineer OS Active</span>
           </div>
-          <Settings size={16} className={styles.navItem} style={{ marginLeft: 'auto', padding: 0 }} />
+          <Link href="/settings">
+            <Settings size={16} className={styles.navItem} style={{ marginLeft: 'auto', padding: 0 }} />
+          </Link>
         </div>
       </div>
     </aside>

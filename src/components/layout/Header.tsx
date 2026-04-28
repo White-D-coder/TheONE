@@ -1,23 +1,37 @@
 'use client';
 
 import React from 'react';
-import { Bell, Search, Zap, Command } from 'lucide-react';
+import { Bell, Search, Zap } from 'lucide-react';
 import styles from './Header.module.css';
+import { getOSState } from '@/lib/actions';
 
 export function Header() {
+  const [state, setState] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    async function load() {
+      const osState = await getOSState();
+      setState(osState);
+    }
+    load();
+  }, []);
+
+  const latestWorth = state?.user?.worthHistory?.[0]?.score || 0;
+  const displayWorth = (latestWorth * 50).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
   return (
     <header className={styles.header}>
       <div className={styles.left}>
         <div className={styles.modeIndicator}>
           <div className={styles.pulse} />
-          <span>ACTIVE MODE: ENGINEER</span>
+          <span>ACTIVE MODE: {state?.currentMode || 'INITIALIZING'}</span>
         </div>
       </div>
 
       <div className={styles.right}>
         <div className={styles.worthBadge}>
           <span className={styles.worthLabel}>Monthly Worth</span>
-          <span className={styles.worthValue}>$4,250</span>
+          <span className={styles.worthValue}>{displayWorth}</span>
         </div>
 
         <div className={styles.iconButton}>

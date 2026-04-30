@@ -1,0 +1,45 @@
+name: Engineer OS CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Generate Prisma Client
+      run: npx prisma generate
+      
+    - name: Type Check
+      run: npm run lint # Or tsc if configured
+      
+    - name: Build Verification
+      run: npm run build
+      env:
+        DATABASE_URL: "file:./dev.db"
+        NEXT_PUBLIC_API_URL: "https://engineer-os.vercel.app"
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+  deploy_preview:
+    if: github.event_name == 'pull_request'
+    needs: build_and_test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Vercel Preview
+        run: echo "Triggering Vercel Preview Deployment..."

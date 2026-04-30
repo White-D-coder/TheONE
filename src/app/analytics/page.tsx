@@ -48,7 +48,7 @@ export default function AnalyticsPage() {
   const weeklyChartData = [45, 62, 58, 75, 82, 68, 91];
   const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
-  const avgSkillScore = stats?.skills.length > 0 
+  const avgSkillScore = (stats?.skills?.length || 0) > 0 
     ? (stats.skills.reduce((acc: any, s: any) => acc + s.score, 0) / stats.skills.length).toFixed(1)
     : "0";
 

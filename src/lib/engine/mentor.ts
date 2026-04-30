@@ -1,6 +1,11 @@
+import OpenAI from 'openai';
 import prisma from '@/lib/prisma';
 
 const DEFAULT_USER_EMAIL = 'student@engineer-os.com';
+
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+}) : null;
 
 /**
  * Mentor Engine
@@ -12,6 +17,7 @@ export async function getMentorAudit() {
     include: {
       skills: true,
       evidences: true,
+      projects: true,
       logs: { take: 7, orderBy: { date: 'desc' } },
       worthHistory: { take: 2, orderBy: { createdAt: 'desc' } }
     }
@@ -23,25 +29,50 @@ export async function getMentorAudit() {
   const evidenceCount = user.evidences.length;
   const avgSkillScore = skillCount ? user.skills.reduce((acc, s) => acc + s.score, 0) / skillCount : 0;
 
-  // Logic for the audit
   const bottlenecks = [];
   if (evidenceCount < 5) bottlenecks.push("Critically low evidence (under 5 items)");
   if (avgSkillScore < 75) bottlenecks.push(`Low mastery average (${avgSkillScore.toFixed(1)})`);
-  if (user.worthHistory.length > 1 && user.worthHistory[0].score < user.worthHistory[1].score) {
-    bottlenecks.push("Stagnant/Declining career worth");
-  }
+  
+  const worthDelta = user.worthHistory.length > 1 
+    ? (user.worthHistory[0].score - user.worthHistory[1].score).toFixed(1)
+    : '0.0';
 
-  if (bottlenecks.length > 0) {
-    const primary = bottlenecks[0];
-    return `SYSTEM CRITICAL: ${primary}. You are leaking professional gravity. Stop horizontal exploration and focus on deep technical proof. Your 'Strict Mentor' protocol recommends 48 hours of pure execution on your primary role.`;
+  if (!openai) {
+    // Fallback Rule-based logic
+    if (bottlenecks.length > 0) {
+      return `SYSTEM CRITICAL: ${bottlenecks[0]}. You are leaking professional gravity. Focus on deep technical proof.`;
+    }
+    return "Performance is stable. Your project momentum is grounded. Push for expert status.";
   }
+  
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a 'Strict Performance Analyst' for a top-tier engineer. Your goal is to identify bottlenecks and output-leaks. Be sharp, direct, and professional. No fluff."
+        },
+        {
+          role: "user",
+          content: `Audit this engineer's profile:
+            - Evidence Velocity: ${evidenceCount} items
+            - Mastery Avg: ${avgSkillScore.toFixed(1)}%
+            - Worth Delta: ${worthDelta}
+            - Bottlenecks: ${bottlenecks.join(', ') || 'None'}
+            - Shipped Projects: ${user.projects.filter(p => p.stage === 'SHIPPED').length}
+            
+            Provide a 3-sentence performance audit.`
+        }
+      ],
+      temperature: 0.5,
+    });
 
-  const roleWeights = (user.roleWeights as any) || {};
-  if (roleWeights.engineer > 50 && evidenceCount < 10) {
-    return "You claim to be an Engineer but your Evidence Vault is empty. In the elite market, code that isn't public or verified doesn't exist. Sync your GitHub immediately.";
+    return response.choices[0].message.content || "Audit generation failed.";
+  } catch (error) {
+    console.error('[AI_MENTOR] OpenAI call failed:', error);
+    return "AI Audit failed. Check API connectivity.";
   }
-
-  return "Performance is stable, but stability is the first step toward obsolescence. Push for 'Expert' status in your secondary skills to increase your architectural breadth.";
 }
 
 export async function getDailyInsight() {

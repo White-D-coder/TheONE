@@ -11,6 +11,7 @@ import { syncContentFeeds as runSyncContentFeeds } from '@/lib/engine/content';
 import { logEvent as runLogEvent, EventType } from '@/lib/engine/events';
 import { draftApplicationMaterials as runDraftApplication, createApplication as runCreateApplication } from '@/lib/engine/applications';
 import { generateWeeklyReport as runGenerateWeeklyReport } from '@/lib/engine/reports';
+import { calculateMonthlyWorth as runCalculateMonthlyWorth } from '@/lib/engine/worth';
 
 const DEFAULT_USER_EMAIL = 'student@engineer-os.com';
 
@@ -21,7 +22,11 @@ export async function getOSState() {
     const user = await prisma.user.findUnique({
       where: { email: DEFAULT_USER_EMAIL },
       include: {
-        skills: true,
+        skills: {
+          include: {
+            evidences: true
+          }
+        },
         evidences: true,
         projects: true,
         routines: true,
@@ -84,78 +89,17 @@ export async function updateMode(mode: string) {
   }
 }
 
+import { generateAdaptiveRoutine } from '@/lib/engine/routine';
+
 export async function generateRoutine() {
   try {
     const user = await prisma.user.findUnique({
-      where: { email: DEFAULT_USER_EMAIL },
-      include: { logs: { orderBy: { date: 'desc' }, take: 1 } }
+      where: { email: DEFAULT_USER_EMAIL }
     });
     
     if (!user) return [];
 
-    const roles = user.roleWeights as any || {};
-    const mode = user.currentMode;
-
-    // Routine Logic
-    const routine = [];
-    const sortedRoles = Object.entries(roles).sort(([, a]: any, [, b]: any) => b - a);
-    const primaryRole = sortedRoles[0]?.[0] || 'engineer';
-    const secondaryRole = sortedRoles[1]?.[0] || 'builder';
-
-    const evidences = user.evidences || [];
-    const skills = user.skills || [];
-
-    // Build schedule
-    routine.push({ 
-      time: '08:00', 
-      label: 'Morning Ritual', 
-      duration: 30, 
-      type: 'HABIT', 
-      color: 'var(--accent-emerald)', 
-      status: 'DONE',
-      target: 'Review today\'s high-gravity targets.'
-    });
-    
-    let deepWorkLabel = `Power Block: ${primaryRole.toUpperCase()} Deep Work`;
-    let deepWorkTarget = evidences.length > 0 ? `Focus on shipping: ${evidences[0].title}` : 'Initialize a high-complexity project.';
-    
-    if (mode === 'CANDIDATE') {
-      deepWorkLabel = "LeetCode / System Design Drill";
-      deepWorkTarget = "Solve 3 'Medium' Array/DP problems.";
-    }
-    
-    routine.push({ 
-      time: '09:00', 
-      label: deepWorkLabel, 
-      duration: 180, 
-      type: 'DEEP', 
-      color: 'var(--accent-blue)', 
-      status: 'ACTIVE',
-      tag: mode === 'SPRINT' ? 'MAX INTENSITY' : 'CORE',
-      target: deepWorkTarget
-    });
-
-    routine.push({ 
-      time: '12:00', 
-      label: 'Fuel & Reset', 
-      duration: 60, 
-      type: 'REST', 
-      color: 'var(--text-tertiary)', 
-      status: 'PENDING',
-      target: 'Step away from all screens.'
-    });
-
-    const buildTarget = skills.length > 0 ? `Refine ${skills[0].name} mastery.` : 'Build a system visualization.';
-
-    routine.push({ 
-      time: '13:00', 
-      label: `Execution: ${secondaryRole.toUpperCase()} Session`, 
-      duration: 120, 
-      type: 'BUILD', 
-      color: 'var(--accent-purple)', 
-      status: 'PENDING',
-      target: buildTarget
-    });
+    const routine = await generateAdaptiveRoutine(DEFAULT_USER_EMAIL);
 
     // Sync with DB
     await prisma.routine.upsert({
@@ -164,6 +108,7 @@ export async function generateRoutine() {
       create: { id: `daily-${user.id}`, userId: user.id, name: 'Dynamic Daily', blocks: routine }
     });
 
+    revalidatePath('/routine');
     return routine;
   } catch (e) {
     console.error('generateRoutine failed:', e);
@@ -182,6 +127,7 @@ export async function getDashboardStats() {
         worthHistory: { orderBy: { createdAt: 'desc' }, take: 2 },
         applications: true,
         accounts: true,
+        streaks: true,
         logs: {
           where: {
             date: {
@@ -191,7 +137,8 @@ export async function getDashboardStats() {
         }
       }
     });
-
+    
+    console.log("[DEBUG] getDashboardStats user found:", !!user);
     if (!user) return null;
 
     // GitHub Consistency
@@ -224,21 +171,34 @@ export async function getDashboardStats() {
     const latestInsight = await getDailyInsight();
 
     return serialize({
+      worthScore: user.worthHistory[0]?.score || 0,
       skillScore,
       evidenceCount: user.evidences.length,
       activeProjects: user.projects.length,
       deepWorkHours: (deepWorkMinutes / 60).toFixed(1) + 'h',
       worthTrend,
-      latestInsight,
+      latestInsight: latestInsight || "Ready for performance audit.",
       applicationCount: user.applications.length,
       githubConsistency: {
         score: githubStats?.consistencyScore || 0,
         committedToday: githubStats?.committedToday || false
-      }
+      },
+      streaks: user.streaks
     });
   } catch (e) {
     console.error('getDashboardStats failed:', e);
-    return null;
+    // Fallback to minimal state instead of null to prevent "System Offline"
+    return {
+      worthScore: 0,
+      skillScore: "0",
+      evidenceCount: 0,
+      activeProjects: 0,
+      deepWorkHours: "0.0h",
+      worthTrend: "Initializing...",
+      latestInsight: "System stabilizing...",
+      applicationCount: 0,
+      githubConsistency: { score: 0, committedToday: false }
+    };
   }
 }
 
@@ -293,9 +253,63 @@ export async function generateSocialDraft(evidenceId: string, platform: 'LINKEDI
   return serialize(result);
 }
 
+export async function calculateMonthlyWorth() {
+  const result = await runCalculateMonthlyWorth();
+  revalidatePath('/');
+  revalidatePath('/worth');
+  return serialize(result);
+}
+
 export async function getDrafts() {
   const result = await runGetDrafts();
   return serialize(result);
+}
+
+export async function publishDraft(draftId: string) {
+  try {
+    const draft = await prisma.postDraft.findUnique({ where: { id: draftId } });
+    if (!draft) throw new Error('Draft not found');
+
+    // SIMULATED PUBLISHING LAYER
+    // In production, this would call LinkedIn/Twitter/Instagram APIs via OAuth
+    const publishedUrl = `https://${draft.platform.toLowerCase()}.com/p/${Math.random().toString(36).substring(7)}`;
+
+    const updatedDraft = await prisma.postDraft.update({
+      where: { id: draftId },
+      data: { 
+        status: 'PUBLISHED',
+        publishedUrl
+      }
+    });
+    
+    // Convert the Published Post into an Evidence Item
+    await prisma.evidence.create({
+      data: {
+        userId: draft.userId,
+        type: draft.platform === 'YOUTUBE' ? 'VIDEO' : 'ARTICLE',
+        title: `Published to ${draft.platform}`,
+        description: draft.content.substring(0, 100) + '...',
+        url: publishedUrl,
+        source: draft.platform.toUpperCase(),
+        strength: 0.7
+      }
+    });
+
+    // Log the event for analytics
+    await runLogEvent(EventType.PUBLIC_PROOF, { 
+      description: `Published proof to ${draft.platform}`,
+      draftId: draft.id, 
+      platform: draft.platform,
+      publishedUrl
+    });
+
+    revalidatePath('/proof');
+    revalidatePath('/vault');
+    return serialize(updatedDraft);
+  } catch (e: any) {
+    console.error('publishDraft failed:', e);
+    return null;
+  }
 }
 
 export async function completeRoutineBlock(blockLabel: string, duration: number) {

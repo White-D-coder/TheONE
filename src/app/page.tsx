@@ -50,7 +50,7 @@ export default async function Dashboard() {
           Welcome back, <span className="text-gradient">{user?.name || 'Engineer'}</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', fontWeight: 500 }}>
-          Your performance is <span style={{ color: 'white', fontWeight: 600 }}>optimal</span>. You have 3 pending professional signals to verify.
+          Your performance is <span style={{ color: 'white', fontWeight: 600 }}>optimal</span>. Track your professional momentum in real-time.
         </p>
 
         {!stats.githubConsistency?.committedToday && (
@@ -58,7 +58,7 @@ export default async function Dashboard() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent-rose)', boxShadow: '0 0 10px var(--accent-rose)' }}></div>
               <div>
-                <div style={{ fontWeight: 800, color: 'var(--accent-rose)', fontSize: '0.9rem' }}>CONSISTENCY CRITICAL</div>
+                <div style={{ fontWeight: 800, color: 'var(--accent-rose)', fontSize: '0.9rem' }}>CONSISTENCY ALERT</div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>No GitHub commits detected for the current session. Ship code to maintain your streak.</div>
               </div>
             </div>
@@ -70,6 +70,30 @@ export default async function Dashboard() {
         )}
       </header>
 
+      <section style={{ marginBottom: '32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+          {['CODE', 'DSA', 'CONTENT', 'ROUTINE'].map(type => {
+            const streak = stats.streaks?.find((s: any) => s.type === type);
+            const count = streak?.currentCount || 0;
+            const isZero = count === 0;
+            return (
+              <div key={type} className="glass-card" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', opacity: isZero ? 0.6 : 1, border: isZero ? '1px solid var(--border-subtle)' : '1px solid var(--accent-blue)' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: isZero ? 'var(--bg-surface)' : 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {type === 'CODE' && <Code size={16} color={isZero ? 'var(--text-tertiary)' : 'var(--accent-blue)'} />}
+                  {type === 'DSA' && <Trophy size={16} color={isZero ? 'var(--text-tertiary)' : 'var(--accent-amber)'} />}
+                  {type === 'CONTENT' && <Send size={16} color={isZero ? 'var(--text-tertiary)' : 'var(--accent-emerald)'} />}
+                  {type === 'ROUTINE' && <Clock size={16} color={isZero ? 'var(--text-tertiary)' : 'var(--accent-purple)'} />}
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)', fontWeight: 800 }}>{type} STREAK</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800 }}>{count} Days</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '32px' }}>
         <StatCard 
           title="Deep Work" 
@@ -78,10 +102,10 @@ export default async function Dashboard() {
           trend={stats.deepWorkHours !== "0.0h" ? "Real-time log" : "No logs today"} 
         />
         <StatCard 
-          title="Avg Skill Score" 
-          value={stats.skillScore} 
+          title="Market Worth" 
+          value={stats.worthScore} 
           icon={TrendingUp} 
-          trend={`Based on ${user?.skills.length || 0} skills`} 
+          trend={`$${(stats.worthScore * 50).toLocaleString()} potential`} 
         />
         <StatCard 
           title="Projects" 

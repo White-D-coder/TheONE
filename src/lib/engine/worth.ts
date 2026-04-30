@@ -1,5 +1,4 @@
 import prisma from '@/lib/prisma';
-import { revalidatePath } from 'next/cache';
 
 const DEFAULT_USER_EMAIL = 'student@engineer-os.com';
 
@@ -10,34 +9,63 @@ const DEFAULT_USER_EMAIL = 'student@engineer-os.com';
  */
 export async function calculateMonthlyWorth() {
   const user = await prisma.user.findUnique({
-    where: { email: DEFAULT_USER_EMAIL },
+    where: { email: DEFAULT_USER_EMAIL }
+  });
+
+  if (!user) return null;
+
+  // 0. Scale-First Caching: Check if we have a fresh record (last 15 mins)
+  const cachedRecord = await prisma.worthRecord.findFirst({
+    where: { userId: user.id },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  if (cachedRecord && (Date.now() - cachedRecord.createdAt.getTime() < 15 * 60 * 1000)) {
+    console.log("[WORTH] Serving cached record for scale.");
+    return cachedRecord;
+  }
+
+  // Deep fetch for calculation
+  const fullUser = await prisma.user.findUnique({
+    where: { id: user.id },
     include: {
       skills: true,
       evidences: true,
       projects: true,
       speaking: true,
-      accounts: true
+      accounts: true,
+      worthHistory: { orderBy: { createdAt: 'desc' }, take: 1 }
     }
   });
 
-  if (!user) return null;
+  if (!fullUser) return null;
+  const userToUse = fullUser; // Alias for backward compatibility in the function
+
 
   // 1. Skill Score (30% weight)
-  const skillScore = user.skills.length > 0 
-    ? user.skills.reduce((acc, s) => acc + (s.score * s.confidenceScore), 0) / user.skills.length
+  const skillScore = userToUse.skills.length > 0 
+    ? userToUse.skills.reduce((acc, s) => acc + (s.score * s.confidenceScore), 0) / userToUse.skills.length
     : 0;
 
   // 2. Evidence Score (20% weight)
-  const evidenceScore = user.evidences.length > 0
-    ? user.evidences.reduce((acc, e) => acc + e.strength, 0) * 10
+  const evidenceScore = userToUse.evidences.length > 0
+    ? userToUse.evidences.reduce((acc, e) => acc + e.strength, 0) * 10
     : 0;
 
   // 3. Project & Shipping Score (20% weight)
-  const projectScore = user.projects.length * 15;
+  const projectScore = userToUse.projects.reduce((acc, p) => {
+    let stageWeight = 10; // IDEA
+    if (p.stage === 'BUILDING') stageWeight = 25;
+    if (p.stage === 'SHIPPED') stageWeight = 50;
+    
+    // Bonus for evidence linked to project
+    const projectEvidence = userToUse.evidences.filter(e => e.projectId === p.id).length;
+    return acc + stageWeight + (projectEvidence * 5);
+  }, 0);
 
   // 4. Platform Reputation (20% weight)
   let platformReputation = 0;
-  user.accounts.forEach(acc => {
+  userToUse.accounts.forEach(acc => {
     const stats = acc.stats as any;
     if (acc.platform === 'LEETCODE' && stats?.solvedTotal) {
       platformReputation += (stats.solvedTotal / 10);
@@ -51,14 +79,32 @@ export async function calculateMonthlyWorth() {
   });
 
   // 5. Communication Bonus (10% weight)
-  const speakingBonus = user.speaking.length * 5;
+  const speakingBonus = userToUse.speaking.length * 5;
 
   const totalScore = (skillScore * 0.3) + (evidenceScore * 0.2) + (projectScore * 0.2) + (platformReputation * 0.2) + (speakingBonus * 0.1);
+
+  // 6. Trajectory Mapping (Logic-driven prediction)
+  const lastRecord = userToUse.worthHistory[0];
+  let trajectory = "Establishing baseline...";
+  
+  if (lastRecord) {
+    const delta = totalScore - lastRecord.score;
+    if (delta > 0) {
+      const monthsToSenior = Math.ceil((800 - totalScore) / (delta || 1));
+      trajectory = monthsToSenior > 0 
+        ? `Ready for Senior roles in ~${monthsToSenior} months at current velocity.`
+        : "Senior readiness reached. Focus on elite visibility.";
+    } else if (delta < 0) {
+      trajectory = "Velocity declining. Potential stagnation detected.";
+    } else {
+      trajectory = "Growth plateau. Increase execution intensity.";
+    }
+  }
 
   const now = new Date();
   const record = await prisma.worthRecord.create({
     data: {
-      userId: user.id,
+      userId: userToUse.id,
       month: now.getMonth() + 1,
       year: now.getFullYear(),
       score: parseFloat(totalScore.toFixed(1)),
@@ -67,14 +113,11 @@ export async function calculateMonthlyWorth() {
         evidenceScore: (evidenceScore * 0.2).toFixed(1),
         projectScore: (projectScore * 0.2).toFixed(1),
         platformRep: (platformReputation * 0.2).toFixed(1),
-        speakingBonus: (speakingBonus * 0.1).toFixed(1)
+        speakingBonus: (speakingBonus * 0.1).toFixed(1),
+        trajectory
       }
     }
   });
 
-  try {
-    revalidatePath('/');
-    revalidatePath('/worth');
-  } catch (e) {}
   return record;
 }

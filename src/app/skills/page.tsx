@@ -126,7 +126,7 @@ export default async function SkillsPage() {
                 <div className={styles.skillMeta}>
                   <span className={styles.metaItem}>
                     <ShieldCheck size={12} color="var(--accent-blue)" /> 
-                    {skill.evidenceCount || 0} Evidence Items
+                    {skill.evidences?.length || 0} Evidence Items
                   </span>
                   <span className={styles.metaItem}>
                     <History size={12} /> 

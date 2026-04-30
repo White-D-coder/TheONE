@@ -2,15 +2,19 @@ import prisma from '@/lib/prisma';
 
 const DEFAULT_USER_EMAIL = 'student@engineer-os.com';
 
-export type EventType = 
-  | 'TASK_DONE' 
-  | 'EVIDENCE_ADDED' 
-  | 'SPEAKING_DONE' 
-  | 'SYNC_DONE' 
-  | 'MODE_CHANGE' 
-  | 'WORTH_CALC' 
-  | 'PROJECT_VIEW'
-  | 'OPPORTUNITY_SAVE';
+export const EventType = {
+  TASK_DONE: 'TASK_DONE',
+  EVIDENCE_ADDED: 'EVIDENCE_ADDED',
+  SPEAKING_DONE: 'SPEAKING_DONE',
+  SYNC_DONE: 'SYNC_DONE',
+  MODE_CHANGE: 'MODE_CHANGE',
+  WORTH_CALC: 'WORTH_CALC',
+  PROJECT_VIEW: 'PROJECT_VIEW',
+  OPPORTUNITY_SAVE: 'OPPORTUNITY_SAVE',
+  PUBLIC_PROOF: 'PUBLIC_PROOF'
+} as const;
+
+export type EventType = keyof typeof EventType;
 
 /**
  * Event Logging System

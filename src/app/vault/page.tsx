@@ -275,11 +275,39 @@ export default function VaultPage() {
               {loading === 'YOUTUBE' ? <RefreshCw size={14} className="animate-spin" /> : 'Sync'}
             </button>
           </div>
+
+          {/* LinkedIn */}
+          <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Globe size={20} color="#0077B5" />
+              <span style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)', fontWeight: 800 }}>CONNECT</span>
+            </div>
+            <input 
+              className={styles.syncInput}
+              placeholder="LinkedIn Profile URL" 
+              disabled
+            />
+            <button className={styles.syncBtn} style={{ opacity: 0.5 }}>OAuth Required</button>
+          </div>
+
+          {/* Instagram */}
+          <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Share2 size={20} color="#E4405F" />
+              <span style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)', fontWeight: 800 }}>CONNECT</span>
+            </div>
+            <input 
+              className={styles.syncInput}
+              placeholder="Instagram Username" 
+              disabled
+            />
+            <button className={styles.syncBtn} style={{ opacity: 0.5 }}>Connect App</button>
+          </div>
         </div>
       </section>
 
       <div className={styles.filterBar}>
-        {['ALL', 'REPOS', 'ARTICLES', 'DEMOS', 'SPEECHES'].map((f) => (
+        {['ALL', 'REPOS', 'ARTICLES', 'VIDEOS', 'DEMOS', 'SPEECHES'].map((f) => (
           <button 
             key={f}
             className={`${styles.filterBtn} ${filter === f ? styles.filterBtnActive : ''}`}
@@ -295,8 +323,28 @@ export default function VaultPage() {
       </div>
 
       <div className={styles.vaultGrid}>
-        {evidence.length ? evidence.map((item) => {
-          const Icon = getIcon(item.type);
+        {evidence
+          .filter(item => {
+            if (filter === 'ALL') return true;
+            if (filter === 'REPOS') return item.type === 'REPO';
+            if (filter === 'ARTICLES') return item.type === 'ARTICLE';
+            if (filter === 'DEMOS') return item.type === 'DEMO';
+            if (filter === 'SPEECHES') return item.type === 'SPEECH';
+            if (filter === 'VIDEOS') return item.type === 'VIDEO';
+            return true;
+          })
+          .length ? evidence
+          .filter(item => {
+            if (filter === 'ALL') return true;
+            if (filter === 'REPOS') return item.type === 'REPO';
+            if (filter === 'ARTICLES') return item.type === 'ARTICLE';
+            if (filter === 'DEMOS') return item.type === 'DEMO';
+            if (filter === 'SPEECHES') return item.type === 'SPEECH';
+            if (filter === 'VIDEOS') return item.type === 'VIDEO';
+            return true;
+          })
+          .map((item) => {
+            const Icon = getIcon(item.type);
           return (
             <div key={item.id} className={`glass-card ${styles.evidenceCard}`}>
               <span className={`${styles.strengthBadge} ${

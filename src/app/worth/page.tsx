@@ -11,8 +11,7 @@ import {
   Info,
   ChevronRight
 } from 'lucide-react';
-import { getOSState } from '@/lib/actions';
-import { calculateMonthlyWorth } from '@/lib/engine/worth';
+import { getOSState, calculateMonthlyWorth } from '@/lib/actions';
 import styles from './worth.module.css';
 
 export default function WorthPage() {
@@ -126,7 +125,7 @@ export default function WorthPage() {
               </div>
               <div className={styles.tactic}>
                 <ChevronRight size={16} color="var(--accent-blue)" />
-                <span>Ship 1 major project to IDEA -> SHIPPED to boost consistency.</span>
+                <span>Ship 1 major project to IDEA &rarr; SHIPPED to boost consistency.</span>
               </div>
             </div>
           </div>

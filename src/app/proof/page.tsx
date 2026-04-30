@@ -13,7 +13,7 @@ import {
   RefreshCw,
   Plus
 } from 'lucide-react';
-import { generateSocialDraft, getOSState, getDrafts } from '@/lib/actions';
+import { generateSocialDraft, getOSState, getDrafts, publishDraft } from '@/lib/actions';
 import styles from './proof.module.css';
 
 export default function ProofPage() {
@@ -47,6 +47,11 @@ export default function ProofPage() {
     await generateSocialDraft(selectedArtifact.id, tone as any);
     await loadData();
     setIsGenerating(false);
+  };
+
+  const handlePublish = async (id: string) => {
+    await publishDraft(id);
+    await loadData();
   };
 
   if (loading) return <div className="flex-center" style={{ height: '50vh' }}>Synchronizing narratives...</div>;
@@ -108,7 +113,7 @@ export default function ProofPage() {
         <div className={`glass-card ${styles.editorCard}`}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <div className={styles.draftOptions}>
-              {['LINKEDIN', 'TWITTER', 'MEDIUM'].map(t => (
+              {['LINKEDIN', 'TWITTER', 'MEDIUM', 'INSTAGRAM', 'YOUTUBE'].map(t => (
                 <button 
                   key={t}
                   className={`${styles.optionBtn} ${tone === t ? styles.optionBtnActive : ''}`}
@@ -142,7 +147,10 @@ export default function ProofPage() {
                     />
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
                       <button style={{ background: 'transparent', border: 'none', color: 'var(--text-tertiary)', fontSize: '0.8rem' }}>Delete</button>
-                      <button style={{ padding: '8px 24px', background: 'var(--accent-blue)', border: 'none', borderRadius: '4px', color: 'white', fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <button 
+                        onClick={() => handlePublish(draft.id)}
+                        style={{ padding: '8px 24px', background: 'var(--accent-blue)', border: 'none', borderRadius: '4px', color: 'white', fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                      >
                         Post Now <Send size={14} />
                       </button>
                     </div>

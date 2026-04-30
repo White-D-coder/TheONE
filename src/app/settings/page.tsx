@@ -99,6 +99,44 @@ export default function SettingsPage() {
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>
+          <Lock size={18} style={{ marginRight: '12px' }} />
+          Secrets & Credentials
+        </h2>
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)', marginBottom: '20px' }}>
+          These keys are required for the AI Mentor and Opportunity Discovery engines to function.
+        </p>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <span className={styles.settingLabel}>OpenAI API Key</span>
+            <span className={styles.settingDesc}>Powers the Mentor intelligence and Proof drafting.</span>
+          </div>
+          <input 
+            type="password" 
+            placeholder="sk-..." 
+            className={styles.input} 
+          />
+        </div>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <span className={styles.settingLabel}>Opportunity Board Key</span>
+            <span className={styles.settingDesc}>Used for scanning real-world job feeds.</span>
+          </div>
+          <input 
+            type="password" 
+            placeholder="Key for Adzuna/LinkedIn" 
+            className={styles.input} 
+          />
+        </div>
+        
+        <div style={{ marginTop: '20px', textAlign: 'right' }}>
+          <button className={styles.saveBtn}>Save Credentials</button>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>
           <Smartphone size={18} style={{ marginRight: '12px' }} />
           Integrations
         </h2>
@@ -108,15 +146,18 @@ export default function SettingsPage() {
             <span className={styles.settingLabel}>GitHub Sync</span>
             <span className={styles.settingDesc}>Automatically pull commits and PRs into the Evidence Vault.</span>
           </div>
-          <span style={{ fontSize: '0.8rem', color: 'var(--accent-emerald)', fontWeight: 600 }}>CONNECTED</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--accent-emerald)', fontWeight: 600 }}>CONNECTED</span>
+            <button className="glass-card" style={{ padding: '6px 12px', fontSize: '0.75rem' }}>Update Token</button>
+          </div>
         </div>
 
         <div className={styles.settingRow}>
           <div className={styles.settingInfo}>
-            <span className={styles.settingLabel}>X / LinkedIn API</span>
-            <span className={styles.settingDesc}>Connect platforms for the Public Proof Engine.</span>
+            <span className={styles.settingLabel}>LeetCode / Codeforces</span>
+            <span className={styles.settingDesc}>Connect competitive programming platforms.</span>
           </div>
-          <button className="glass-card" style={{ padding: '8px 16px', fontSize: '0.8rem', color: 'var(--accent-blue)' }}>Connect</button>
+          <button className="glass-card" style={{ padding: '8px 16px', fontSize: '0.8rem', color: 'var(--accent-blue)' }}>Configure Handles</button>
         </div>
       </section>
 

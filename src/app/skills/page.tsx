@@ -138,7 +138,7 @@ export default async function SkillsPage() {
           )) : <p style={{ color: 'var(--text-tertiary)' }}>No technical skills mapped yet.</p>}
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', marginTop: '32px' }}>
-            <span className={styles.categoryTitle}>Communication & Communication</span>
+            <span className={styles.categoryTitle}>Communication & Leadership</span>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{softSkills.length} SKILLS</span>
           </div>
 

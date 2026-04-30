@@ -65,7 +65,8 @@ export default function WorthPage() {
               {currentWorth?.score || '0.0'}
             </div>
             <p style={{ color: 'var(--text-secondary)', maxWidth: '400px', margin: '0 auto 32px' }}>
-              Your worth has increased by **+12%** since last month, driven primarily by your new project evidence.
+              Your worth has {history.length > 1 && history[0].score > history[1].score ? 'increased' : 'stabilized'}. 
+              {history.length > 1 ? `Growth delta: **+${((history[0].score - history[1].score) / history[1].score * 100).toFixed(1)}%** since last month.` : 'Baseline established. Increase output to drive velocity.'}
             </p>
             
             <button 
@@ -117,15 +118,15 @@ export default function WorthPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div className={styles.tactic}>
                 <ChevronRight size={16} color="var(--accent-blue)" />
-                <span>Add 2 more "ELITE" evidence items to hit 8.5 Evidence Score.</span>
+                <span>{currentWorth?.score < 500 ? 'Focus on high-gravity technical proof to exit the junior worth bracket.' : 'Target ELITE signals to reach Senior worth parity.'}</span>
               </div>
               <div className={styles.tactic}>
                 <ChevronRight size={16} color="var(--accent-blue)" />
-                <span>Complete 3 more Speaking Drills to unlock Communication Alpha bonus.</span>
+                <span>{currentWorth?.breakdown?.evidenceScore < 20 ? 'Your evidence velocity is the primary bottleneck. Ship 2 more artifacts.' : 'Evidence is strong. Shift focus to public speaking clarity.'}</span>
               </div>
               <div className={styles.tactic}>
                 <ChevronRight size={16} color="var(--accent-blue)" />
-                <span>Ship 1 major project to IDEA &rarr; SHIPPED to boost consistency.</span>
+                <span>Optimize project stages: Move 1 IDEA &rarr; BUILDING to boost shipping consistency.</span>
               </div>
             </div>
           </div>

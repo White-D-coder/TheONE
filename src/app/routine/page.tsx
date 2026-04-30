@@ -13,7 +13,7 @@ import {
   BrainCircuit,
   RefreshCw
 } from 'lucide-react';
-import { generateRoutine, getOSState, completeRoutineBlock, logDrift } from '@/lib/actions';
+import { generateRoutine, getOSState, completeRoutineBlock, logDrift, updateRoutinePrefs } from '@/lib/actions';
 import styles from './routine.module.css';
 
 export default function RoutinePage() {
@@ -70,7 +70,12 @@ export default function RoutinePage() {
   }
 
   const primaryRole = state ? Object.entries(state.roles)
-    .sort(([, a]: any, [, b]: any) => b - a)[0][0] : 'Engineer';
+    .sort(([, a]: any, [, b]: any) => b - a)[0]?.[0] || 'Engineer' : 'Engineer';
+
+  const completedCount = schedule.filter(b => b.status === 'DONE').length;
+  const efficiency = schedule.length > 0 ? Math.round((completedCount / schedule.length) * 100) : 0;
+  const focusScore = state?.user?.logs?.[0]?.focusScore || 0;
+  const focusGrade = focusScore > 90 ? 'A+' : focusScore > 75 ? 'A' : focusScore > 50 ? 'B' : 'C';
 
   return (
     <div className={`animate-fade-in ${styles.container}`}>
@@ -102,15 +107,15 @@ export default function RoutinePage() {
           <div style={{ display: 'flex', gap: '24px' }}>
             <div>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Efficiency</span>
-              <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>94%</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{efficiency}%</div>
             </div>
             <div>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Deep Work</span>
-              <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{schedule.filter(b => b.status === 'DONE').length * 1.5}h</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{completedCount * 1.5}h</div>
             </div>
             <div>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Focus Score</span>
-              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>A+</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>{focusGrade}</div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
@@ -181,6 +186,68 @@ export default function RoutinePage() {
           </div>
         ))}
       </div>
+      <section className="glass-card" style={{ padding: '32px', marginTop: '64px' }}>
+        <h2 style={{ fontSize: '1.25rem', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <BrainCircuit size={20} className="text-gradient" />
+          AI Baseline Calibration
+        </h2>
+        <p style={{ color: 'var(--text-tertiary)', marginBottom: '32px', fontSize: '0.9rem' }}>
+          Define your non-negotiable daily anchors (Job, Class, Sleep). The AI will plan your technical priority blocks around these.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+          {((state?.user?.routinePrefs as any)?.anchors || []).map((a: any, i: number) => (
+            <div key={i} className="glass-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-surface-hover)' }}>
+              <div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>{a.time}</div>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{a.label}</div>
+              </div>
+              <button 
+                onClick={async () => {
+                  const newAnchors = (state?.user?.routinePrefs as any).anchors.filter((_: any, idx: number) => idx !== i);
+                  await updateRoutinePrefs({ anchors: newAnchors });
+                  await fetchData();
+                }}
+                style={{ background: 'none', border: 'none', color: 'var(--accent-rose)', cursor: 'pointer' }}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <input 
+            id="anchorTime"
+            type="time" 
+            className={styles.syncInput} 
+            style={{ width: '120px' }}
+          />
+          <input 
+            id="anchorLabel"
+            type="text" 
+            placeholder="e.g. Day Job, University, Gym" 
+            className={styles.syncInput} 
+            style={{ flex: 1 }}
+          />
+          <button 
+            className="glass-card"
+            style={{ padding: '0 24px', background: 'var(--grad-primary)', border: 'none', color: 'white', fontWeight: 600 }}
+            onClick={async () => {
+              const time = (document.getElementById('anchorTime') as HTMLInputElement).value;
+              const label = (document.getElementById('anchorLabel') as HTMLInputElement).value;
+              if (!time || !label) return;
+              
+              const currentAnchors = (state?.user?.routinePrefs as any)?.anchors || [];
+              await updateRoutinePrefs({ anchors: [...currentAnchors, { time, label }] });
+              await fetchData();
+              (document.getElementById('anchorLabel') as HTMLInputElement).value = '';
+            }}
+          >
+            Add Anchor
+          </button>
+        </div>
+      </section>
     </div>
   );
 }

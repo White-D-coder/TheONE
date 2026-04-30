@@ -169,7 +169,7 @@ export default function IdentityPage() {
             <h4 style={{ color: 'var(--accent-amber)', marginBottom: '4px' }}>Routine Recalculation Required</h4>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
               Changing weights will reorder your deep work blocks for tomorrow. The AI Mentor suggests 
-              prioritizing **Engineer** mastery as your DSA score has plateaued.
+              prioritizing **{roles.sort((a, b) => a.weight - b.weight)[0]?.name}** growth to maximize your overall professional gravity.
             </p>
             <button 
               onClick={handleSave}

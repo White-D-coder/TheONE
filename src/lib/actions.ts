@@ -32,7 +32,7 @@ export async function getOSState() {
         routines: true,
         logs: {
           orderBy: { date: 'desc' },
-          take: 1
+          take: 7
         },
         worthHistory: {
           orderBy: { createdAt: 'desc' },
@@ -90,6 +90,20 @@ export async function updateMode(mode: string) {
 }
 
 import { generateAdaptiveRoutine } from '@/lib/engine/routine';
+
+export async function updateRoutinePrefs(prefs: any) {
+  try {
+    const user = await prisma.user.update({
+      where: { email: DEFAULT_USER_EMAIL },
+      data: { routinePrefs: prefs }
+    });
+    revalidatePath('/routine');
+    return serialize(user);
+  } catch (e) {
+    console.error('updateRoutinePrefs failed:', e);
+    return null;
+  }
+}
 
 export async function generateRoutine() {
   try {
@@ -199,6 +213,36 @@ export async function getDashboardStats() {
       applicationCount: 0,
       githubConsistency: { score: 0, committedToday: false }
     };
+  }
+}
+
+export async function broadcastEvidence(evidenceId: string, platforms: string[]) {
+  try {
+    const user = await prisma.user.findUnique({ where: { email: DEFAULT_USER_EMAIL } });
+    if (!user) return { success: false };
+
+    const evidence = await prisma.evidence.findUnique({ where: { id: evidenceId } });
+    if (!evidence) return { success: false };
+
+    const results = [];
+    for (const platform of platforms) {
+      const draft = await prisma.postDraft.create({
+        data: {
+          userId: user.id,
+          evidenceId: evidence.id,
+          platform: platform,
+          status: 'DRAFT',
+          content: `🚀 Verification: ${evidence.title}\n\nJust shipped/logged this to my Engineer OS vault. Evidence Strength: ${(evidence.strength * 100).toFixed(0)}%\n\nView here: ${evidence.url || '#'}\n\n#BuildingInPublic #EngineerOS`
+        }
+      });
+      results.push(draft);
+    }
+
+    revalidatePath('/vault');
+    return { success: true, count: results.length };
+  } catch (error) {
+    console.error('broadcastEvidence failed:', error);
+    return { success: false };
   }
 }
 
@@ -332,14 +376,17 @@ export async function completeRoutineBlock(blockLabel: string, duration: number)
 
   workBlocks.push({ label: blockLabel, duration, completedAt: new Date() });
 
+  const focusScore = Math.min(100, workBlocks.length * 25);
+
   const log = await prisma.dailyLog.upsert({
     where: { id: logId },
-    update: { workBlocks },
+    update: { workBlocks, focusScore },
     create: {
       id: logId,
       userId: user.id,
       date: today,
-      workBlocks
+      workBlocks,
+      focusScore
     }
   });
 
@@ -414,8 +461,8 @@ export async function syncYouTube(channelId: string) {
   return result;
 }
 
-export async function syncPublicProfile(url: string) {
-  const result = await runSyncPublicProfile(url);
+export async function syncPublicProfile(url: string, title?: string, projectId?: string, type: string = 'LINK') {
+  const result = await runSyncPublicProfile(url, title, projectId, type);
   if (result.success) {
     revalidatePath('/vault');
   }

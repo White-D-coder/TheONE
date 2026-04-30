@@ -50,7 +50,7 @@ export default async function Dashboard() {
           Welcome back, <span className="text-gradient">{user?.name || 'Engineer'}</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', fontWeight: 500 }}>
-          Your performance is <span style={{ color: 'white', fontWeight: 600 }}>optimal</span>. Track your professional momentum in real-time.
+          Your performance is <span style={{ color: 'white', fontWeight: 600 }}>{stats.deepWorkHours !== "0.0h" ? 'active' : 'stabilizing'}</span>. You have <span style={{ color: 'var(--accent-blue)', fontWeight: 800 }}>{user?.evidences.length || 0}</span> verified signals in your vault.
         </p>
 
         {!stats.githubConsistency?.committedToday && (
@@ -237,10 +237,9 @@ export default async function Dashboard() {
           <div className="glass-card" style={{ padding: '24px' }}>
             <h3 style={{ fontSize: '1rem', marginBottom: '20px' }}>Non-Negotiables (Today)</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* These should also be DB driven from Task model, but using as functional checklist for now */}
               <label style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                <input type="checkbox" checked={parseInt(stats.deepWorkHours) >= 1.5} readOnly />
-                <span>90m Deep Work {parseInt(stats.deepWorkHours) >= 1.5 && '✅'}</span>
+                <input type="checkbox" checked={parseFloat(stats.deepWorkHours) >= 1.5} readOnly />
+                <span>90m Deep Work {parseFloat(stats.deepWorkHours) >= 1.5 && '✅'}</span>
               </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                 <input type="checkbox" checked={user?.evidences.length > 0} readOnly />
@@ -248,7 +247,7 @@ export default async function Dashboard() {
               </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                 <input type="checkbox" checked={user?.speaking.length > 0} readOnly />
-                <span>10m Speaking Drill</span>
+                <span>Speaking Drill Performance</span>
               </label>
             </div>
           </div>

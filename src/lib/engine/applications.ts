@@ -57,7 +57,7 @@ export async function createApplication(oppId: string, materials: any) {
   const user = await prisma.user.findUnique({ where: { email: DEFAULT_USER_EMAIL } });
   if (!user) return null;
 
-  return await prisma.application.create({
+  const application = await prisma.application.create({
     data: {
       userId: user.id,
       oppId: oppId,
@@ -67,4 +67,16 @@ export async function createApplication(oppId: string, materials: any) {
       status: 'SUBMITTED'
     }
   });
+
+  // Generate a Public Proof draft for the application
+  await prisma.postDraft.create({
+    data: {
+      userId: user.id,
+      platform: 'LINKEDIN',
+      content: `Just applied for the ${materials.title} position at ${materials.company}! 🚀\n\nI'm leveraging my verified track record in technical execution to contribute to their team. #BuildingInPublic #Engineering #TheONE`,
+      status: 'DRAFT'
+    }
+  });
+
+  return application;
 }

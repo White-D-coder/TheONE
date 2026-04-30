@@ -362,7 +362,7 @@ export async function syncYouTubeWithHandle(handle: string) {
 /**
  * Public Profile Ingestor
  */
-export async function syncPublicProfile(url: string) {
+export async function syncPublicProfile(url: string, title?: string, projectId?: string, type: string = 'LINK') {
   try {
     const user = await prisma.user.findUnique({ where: { email: DEFAULT_USER_EMAIL } });
     if (!user) return { success: false };
@@ -376,11 +376,12 @@ export async function syncPublicProfile(url: string) {
     await prisma.evidence.create({
       data: {
         userId: user.id,
-        type: 'LINK',
-        title: `Public Profile: ${platform}`,
-        description: `Verified link to ${platform} profile.`,
+        projectId: projectId || null,
+        type: type as any,
+        title: title || `Public Proof: ${platform}`,
+        description: `Verified link to ${platform} asset.`,
         url: url,
-        strength: 0.5,
+        strength: 0.6,
         source: platform
       }
     });

@@ -45,8 +45,14 @@ export default function AnalyticsPage() {
 
   if (loading) return <div className="flex-center" style={{ height: '50vh' }}>Auditing performance...</div>;
 
-  const weeklyChartData = [45, 62, 58, 75, 82, 68, 91];
-  const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+  const logs = (stats?.logs || []).slice().reverse();
+  const weeklyChartData = logs.length > 0 
+    ? logs.map((l: any) => l.focusScore || 0)
+    : [0, 0, 0, 0, 0, 0, 0];
+  
+  const days = logs.length > 0
+    ? logs.map((l: any) => new Date(l.date).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase())
+    : ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
   const avgSkillScore = (stats?.skills?.length || 0) > 0 
     ? (stats.skills.reduce((acc: any, s: any) => acc + s.score, 0) / stats.skills.length).toFixed(1)

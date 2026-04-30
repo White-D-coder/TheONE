@@ -15,9 +15,10 @@ import {
   Code,
   Trophy,
   Terminal,
-  Play
+  Play,
+  Share2
 } from 'lucide-react';
-import { syncGitHub, syncLeetCode, syncCodeforces, syncMedium, syncYouTube, syncPublicProfile, getOSState } from '@/lib/actions';
+import { syncGitHub, syncLeetCode, syncCodeforces, syncMedium, syncYouTube, syncPublicProfile, getOSState, broadcastEvidence } from '@/lib/actions';
 import { Modal } from '@/components/ui/Modal';
 import styles from './vault.module.css';
 
@@ -26,12 +27,14 @@ export default function VaultPage() {
   const [loading, setLoading] = useState<string | null>(null);
   const [evidence, setEvidence] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Form state
   const [manualTitle, setManualTitle] = useState('');
   const [manualType, setManualType] = useState('REPO');
   const [manualUrl, setManualUrl] = useState('');
+  const [manualProject, setManualProject] = useState('');
 
   const [ghUser, setGhUser] = useState('');
   const [lcUser, setLcUser] = useState('');
@@ -44,6 +47,7 @@ export default function VaultPage() {
     if ((state as any).user) {
       setEvidence((state as any).user.evidences);
       setAccounts((state as any).user.accounts);
+      setProjects((state as any).user.projects || []);
     }
   };
 
@@ -56,12 +60,13 @@ export default function VaultPage() {
     if (!manualUrl) return;
     
     setLoading('MANUAL');
-    const result = await syncPublicProfile(manualUrl); // We might want to expand this to take more fields
+    const result = await syncPublicProfile(manualUrl, manualTitle, manualProject, manualType);
     if (result.success) {
       await fetchData();
       setIsModalOpen(false);
       setManualTitle('');
       setManualUrl('');
+      setManualProject('');
     } else {
       alert(`Sync failed: ${(result as any).error || 'Platform error'}`);
     }
@@ -163,6 +168,20 @@ export default function VaultPage() {
               <option value="ARTICLE">Article / Blog</option>
               <option value="VIDEO">Video / Demo</option>
               <option value="LINK">External Profile</option>
+            </select>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>ASSOCIATED PROJECT</label>
+            <select 
+              className={styles.syncInput} 
+              style={{ width: '100%' }}
+              value={manualProject}
+              onChange={(e) => setManualProject(e.target.value)}
+            >
+              <option value="">None (Independent Asset)</option>
+              {projects.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
             </select>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -307,7 +326,7 @@ export default function VaultPage() {
       </section>
 
       <div className={styles.filterBar}>
-        {['ALL', 'REPOS', 'ARTICLES', 'VIDEOS', 'DEMOS', 'SPEECHES'].map((f) => (
+        {['ALL', 'REPOS', 'ARTICLES', 'VIDEOS', 'DEMOS', 'ALGORITHMS'].map((f) => (
           <button 
             key={f}
             className={`${styles.filterBtn} ${filter === f ? styles.filterBtnActive : ''}`}
@@ -330,6 +349,7 @@ export default function VaultPage() {
             if (filter === 'ARTICLES') return item.type === 'ARTICLE';
             if (filter === 'DEMOS') return item.type === 'DEMO';
             if (filter === 'SPEECHES') return item.type === 'SPEECH';
+            if (filter === 'ALGORITHMS') return item.type === 'ALGORITHMIC';
             if (filter === 'VIDEOS') return item.type === 'VIDEO';
             return true;
           })
@@ -368,15 +388,21 @@ export default function VaultPage() {
 
               <div className={styles.evidenceFooter}>
                 <span className={styles.evidenceDate}>{new Date(item.createdAt).toLocaleDateString()}</span>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <button style={{ color: 'var(--text-tertiary)', border: 'none', background: 'transparent' }}><MoreVertical size={16} /></button>
-                  {item.url && (
-                    <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                      <button style={{ color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 600, border: 'none', background: 'transparent' }}>
-                        VIEW <ExternalLink size={12} />
-                      </button>
-                    </a>
-                  )}
+                <p className={styles.evidenceDesc}>{item.description}</p>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px', alignItems: 'center' }}>
+                  <a href={item.url} target="_blank" rel="noreferrer" className={styles.evidenceLink}>
+                    <ExternalLink size={14} /> VIEW SOURCE
+                  </a>
+                  <button 
+                    onClick={async () => {
+                      const res = await broadcastEvidence(item.id, ['LINKEDIN']);
+                      if (res.success) alert('Evidence Broadcasted to Drafts!');
+                    }}
+                    className={styles.evidenceLink} 
+                    style={{ background: 'var(--accent-blue)', color: 'white', border: 'none' }}
+                  >
+                    <Share2 size={14} /> BROADCAST
+                  </button>
                 </div>
               </div>
             </div>

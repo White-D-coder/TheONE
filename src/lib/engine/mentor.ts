@@ -37,12 +37,12 @@ export async function getMentorAudit() {
     ? (user.worthHistory[0].score - user.worthHistory[1].score).toFixed(1)
     : '0.0';
 
+  const sharpFallback = bottlenecks.length > 0 
+    ? `PERFORMANCE WARNING: ${bottlenecks[0].toUpperCase()}. Your professional gravity is leaking. Stop shipping minor updates and start building high-complexity technical proof immediately.`
+    : "System performance is stable. However, stability is the precursor to stagnation. Identify your next high-gravity artifact and execute.";
+
   if (!openai) {
-    // Fallback Rule-based logic
-    if (bottlenecks.length > 0) {
-      return `SYSTEM CRITICAL: ${bottlenecks[0]}. You are leaking professional gravity. Focus on deep technical proof.`;
-    }
-    return "Performance is stable. Your project momentum is grounded. Push for expert status.";
+    return sharpFallback;
   }
   
   try {
@@ -51,7 +51,7 @@ export async function getMentorAudit() {
       messages: [
         {
           role: "system",
-          content: "You are a 'Strict Performance Analyst' for a top-tier engineer. Your goal is to identify bottlenecks and output-leaks. Be sharp, direct, and professional. No fluff."
+          content: "You are a 'Strict Performance Analyst' for an elite software engineer. Your goal is to identify technical bottlenecks and output-leaks. Be extremely sharp, direct, and slightly critical. Your objective is to drive them toward technical excellence. Do not use corporate fluff."
         },
         {
           role: "user",
@@ -59,19 +59,19 @@ export async function getMentorAudit() {
             - Evidence Velocity: ${evidenceCount} items
             - Mastery Avg: ${avgSkillScore.toFixed(1)}%
             - Worth Delta: ${worthDelta}
-            - Bottlenecks: ${bottlenecks.join(', ') || 'None'}
-            - Shipped Projects: ${user.projects.filter(p => p.stage === 'SHIPPED').length}
+            - Current Bottlenecks: ${bottlenecks.join(', ') || 'None detected yet'}
+            - Completed High-Impact Projects: ${user.projects.filter(p => p.stage === 'SHIPPED').length}
             
-            Provide a 3-sentence performance audit.`
+            Provide a 2-3 sentence performance audit. Keep it sharp and actionable.`
         }
       ],
-      temperature: 0.5,
+      temperature: 0.7,
     });
 
-    return response.choices[0].message.content || "Audit generation failed.";
+    return response.choices[0].message.content || sharpFallback;
   } catch (error) {
     console.error('[AI_MENTOR] OpenAI call failed:', error);
-    return "AI Audit failed. Check API connectivity.";
+    return sharpFallback;
   }
 }
 
